@@ -8,8 +8,6 @@ namespace StringMagician.Handlers;
 internal class FileHandler : IHandler
 {
 	private readonly IUserInterface _userInterface;
-	private string? _inputFilePath;
-	private string? _outputFilePath;
 
 	/// <summary>
 	/// Gets a value indicating whether the application is stopped.
@@ -34,21 +32,21 @@ internal class FileHandler : IHandler
 	public IEnumerable<string> ReadInput()
 	{
 		_userInterface.WriteMessage("Enter the path of the input file or type 'exit' to finish:");
-		_inputFilePath = _userInterface.ReadInput();
+		var inputFilePath = _userInterface.ReadInput();
 
-		ArgumentNullException.ThrowIfNull(_inputFilePath);
+		ArgumentNullException.ThrowIfNull(inputFilePath);
 
-		if (_inputFilePath.Equals("exit", StringComparison.CurrentCultureIgnoreCase))
+		if (inputFilePath.Equals("exit", StringComparison.CurrentCultureIgnoreCase))
 		{
 			IsStopped = true;
 
 			return Array.Empty<string>();
 		}
 
-		if (File.Exists(_inputFilePath) is false)
+		if (File.Exists(inputFilePath) is false)
 			throw new FileNotFoundException("Input file not exist.");
 
-		return File.ReadAllLines(_inputFilePath);
+		return File.ReadAllLines(inputFilePath);
 	}
 
 	/// <summary>
@@ -59,11 +57,11 @@ internal class FileHandler : IHandler
 	public void WriteOutput(IEnumerable<string> output)
 	{
 		_userInterface.WriteMessage("Enter output file path:");
-		_outputFilePath = _userInterface.ReadInput();
+		var outputFilePath = _userInterface.ReadInput();
 
-		ArgumentNullException.ThrowIfNull(_outputFilePath);
+		ArgumentNullException.ThrowIfNull(outputFilePath);
 
-		File.WriteAllLines(_outputFilePath, output);
-		_userInterface.WriteMessage($"Output written to file {_outputFilePath} successfully.");
+		File.WriteAllLines(outputFilePath, output);
+		_userInterface.WriteMessage($"Output written to file {outputFilePath} successfully.");
 	}
 }

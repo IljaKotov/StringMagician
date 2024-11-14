@@ -3,7 +3,7 @@
 /// <summary>
 /// Contains regular expression patterns for parsing expressions to tokens (operands and operators).
 /// </summary>
-internal class RegexPatterns
+internal record RegexPatterns
 {
 	public const string OperandPattern = @"[^+\-()*]+";
 	public const string OperatorPattern = @"[+*-]";

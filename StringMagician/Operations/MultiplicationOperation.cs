@@ -12,6 +12,7 @@ internal class MultiplicationOperation : IOperation
 	/// Gets the priority of the operation.
 	/// </summary>
 	public int Priority => 2;
+
 	/// <summary>
 	/// Gets the operator symbol.
 	/// </summary>

@@ -10,7 +10,7 @@ internal class RpnEvaluator : IEvaluator
 	private readonly IDictionary<string, IOperation> _operations;
 
 	/// <summary>
-	/// Initialize a new instanse of <see cref="RpnEvaluator"/> with the given operations.
+	/// Initialize a new instance of <see cref="RpnEvaluator"/> with the given operations.
 	/// </summary>
 	/// <param name="operations">The list of operations to be used for evaluation.</param>
 	internal RpnEvaluator(IEnumerable<IOperation> operations)
