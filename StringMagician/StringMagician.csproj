@@ -21,4 +21,8 @@
       <None Remove="appsettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Core\" />
+    </ItemGroup>
+
 </Project>
