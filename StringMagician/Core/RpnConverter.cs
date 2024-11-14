@@ -20,7 +20,7 @@ internal class RpnConverter : IConverter
 	/// Initializes a new instance of the <see cref="RpnConverter"/> class.
 	/// </summary>
 	/// <param name="operations">The list of operations to be used for conversion.</param>
-	internal RpnConverter(IEnumerable<IOperation> operations)
+	public RpnConverter(IEnumerable<IOperation> operations)
 	{
 		_output = [];
 

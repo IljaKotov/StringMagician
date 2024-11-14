@@ -17,7 +17,7 @@ internal class ProcessorCore : IProcessorCore
 	/// <param name="parser">The parser to be used for parsing expressions.</param>
 	/// <param name="converter">The converter to be used for converting expressions to RPN.</param>
 	/// <param name="evaluator">The evaluator to be used for evaluating RPN expressions.</param>
-	internal ProcessorCore(IParser parser,
+	public ProcessorCore(IParser parser,
 		IConverter converter,
 		IEvaluator evaluator)
 	{

@@ -7,6 +7,7 @@ namespace StringMagician.Handlers;
 /// </summary>
 internal class ConsoleHandler : IHandler
 {
+	private const string ExitCommand = "exit";
 	private readonly IUserInterface _userInterface;
 
 	/// <summary>
@@ -18,7 +19,7 @@ internal class ConsoleHandler : IHandler
 	/// Initializes a new instance of the <see cref="ConsoleHandler"/> class.
 	/// </summary>
 	/// <param name="userInterface">The user interface to be used.</param>
-	internal ConsoleHandler(IUserInterface userInterface)
+	public ConsoleHandler(IUserInterface userInterface)
 	{
 		_userInterface = userInterface;
 	}
@@ -32,12 +33,12 @@ internal class ConsoleHandler : IHandler
 	{
 		var inputLines = new List<string>();
 
-		_userInterface.WriteMessage("Enter expression or type 'exit' to finish:");
+		_userInterface.WriteMessage($"Enter expression or type '{ExitCommand}' to finish:");
 		var input = _userInterface.ReadInput();
 
 		ArgumentNullException.ThrowIfNull(input);
 
-		if (input.Equals("exit", StringComparison.CurrentCultureIgnoreCase))
+		if (input.Equals(ExitCommand, StringComparison.CurrentCultureIgnoreCase))
 		{
 			IsStopped = true;
 

@@ -17,7 +17,7 @@ internal class ProcessorRunner
 	/// </summary>
 	/// <param name="serviceProvider">The service provider for dependency injection.</param>
 	/// <param name="processorCore">The core processor for handling input lines.</param>
-	internal ProcessorRunner(IServiceProvider serviceProvider, IProcessorCore processorCore)
+	public ProcessorRunner(IServiceProvider serviceProvider, IProcessorCore processorCore)
 	{
 		_serviceProvider = serviceProvider;
 		_processorCore = processorCore;
@@ -36,12 +36,9 @@ internal class ProcessorRunner
 		{
 			var inputLines = handler.ReadInput();
 
-			if (handler.IsStopped)
-				break;
+			if (handler.IsStopped) break;
 
-			var results = inputLines.Select(line =>
-				_processorCore.ProcessLine(line)).ToList();
-
+			var results = ProcessInputLines(inputLines);
 			handler.WriteOutput(results);
 		}
 	}
@@ -58,5 +55,10 @@ internal class ProcessorRunner
 			"2" => _serviceProvider.GetService<FileHandler>(),
 			_ => SelectHandler()
 		};
+	}
+
+	private List<string> ProcessInputLines(IEnumerable<string> inputLines)
+	{
+		return inputLines.Select(line => _processorCore.ProcessLine(line)).ToList();
 	}
 }

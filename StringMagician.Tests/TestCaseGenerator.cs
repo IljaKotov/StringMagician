@@ -1,6 +1,6 @@
 ﻿namespace StringMagician.Tests;
 
-internal class TestCaseGenerator
+internal static class TestCaseGenerator
 {
 	public static IEnumerable<object[]> GetTestData()
 	{

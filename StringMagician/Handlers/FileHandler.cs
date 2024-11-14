@@ -7,6 +7,7 @@ namespace StringMagician.Handlers;
 /// </summary>
 internal class FileHandler : IHandler
 {
+	private const string ExitCommand = "exit";
 	private readonly IUserInterface _userInterface;
 
 	/// <summary>
@@ -18,7 +19,7 @@ internal class FileHandler : IHandler
 	/// Initializes a new instance of the <see cref="FileHandler"/> class.
 	/// </summary>
 	/// <param name="userInterface">The user interface to be used for input and output operations.</param>
-	internal FileHandler(IUserInterface userInterface)
+	public FileHandler(IUserInterface userInterface)
 	{
 		_userInterface = userInterface;
 	}
@@ -31,12 +32,12 @@ internal class FileHandler : IHandler
 	/// <exception cref="FileNotFoundException">Thrown when the input file does not exist.</exception>
 	public IEnumerable<string> ReadInput()
 	{
-		_userInterface.WriteMessage("Enter the path of the input file or type 'exit' to finish:");
+		_userInterface.WriteMessage($"Enter the path of the input file or type '{ExitCommand}' to finish:");
 		var inputFilePath = _userInterface.ReadInput();
 
 		ArgumentNullException.ThrowIfNull(inputFilePath);
 
-		if (inputFilePath.Equals("exit", StringComparison.CurrentCultureIgnoreCase))
+		if (inputFilePath.Equals(ExitCommand, StringComparison.CurrentCultureIgnoreCase))
 		{
 			IsStopped = true;
 

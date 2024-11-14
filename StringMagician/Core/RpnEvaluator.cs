@@ -13,7 +13,7 @@ internal class RpnEvaluator : IEvaluator
 	/// Initialize a new instance of <see cref="RpnEvaluator"/> with the given operations.
 	/// </summary>
 	/// <param name="operations">The list of operations to be used for evaluation.</param>
-	internal RpnEvaluator(IEnumerable<IOperation> operations)
+	public RpnEvaluator(IEnumerable<IOperation> operations)
 	{
 		_operations = operations.ToDictionary(op => op.Operator, op => op);
 	}
