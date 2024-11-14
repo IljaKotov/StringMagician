@@ -1,0 +1,69 @@
+﻿using StringMagician.Interfaces;
+
+namespace StringMagician.Handlers;
+
+/// <summary>
+/// Handles file input and output operations.
+/// </summary>
+internal class FileHandler : IHandler
+{
+	private readonly IUserInterface _userInterface;
+	private string? _inputFilePath;
+	private string? _outputFilePath;
+
+	/// <summary>
+	/// Gets a value indicating whether the application is stopped.
+	/// </summary>
+	public bool IsStopped { get; private set; }
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="FileHandler"/> class.
+	/// </summary>
+	/// <param name="userInterface">The user interface to be used for input and output operations.</param>
+	internal FileHandler(IUserInterface userInterface)
+	{
+		_userInterface = userInterface;
+	}
+
+	/// <summary>
+	/// Reads input from a file.
+	/// </summary>
+	/// <returns>A collection of input lines.</returns>
+	/// <exception cref="ArgumentNullException">Thrown when the input file path is null.</exception>
+	/// <exception cref="FileNotFoundException">Thrown when the input file does not exist.</exception>
+	public IEnumerable<string> ReadInput()
+	{
+		_userInterface.WriteMessage("Enter the path of the input file or type 'exit' to finish:");
+		_inputFilePath = _userInterface.ReadInput();
+
+		ArgumentNullException.ThrowIfNull(_inputFilePath);
+
+		if (_inputFilePath.Equals("exit", StringComparison.CurrentCultureIgnoreCase))
+		{
+			IsStopped = true;
+
+			return Array.Empty<string>();
+		}
+
+		if (File.Exists(_inputFilePath) is false)
+			throw new FileNotFoundException("Input file not exist.");
+
+		return File.ReadAllLines(_inputFilePath);
+	}
+
+	/// <summary>
+	/// Writes output to a file.
+	/// </summary>
+	/// <param name="output">The collection of output lines to be written.</param>
+	/// <exception cref="ArgumentNullException">Thrown when the output file path is null.</exception>
+	public void WriteOutput(IEnumerable<string> output)
+	{
+		_userInterface.WriteMessage("Enter output file path:");
+		_outputFilePath = _userInterface.ReadInput();
+
+		ArgumentNullException.ThrowIfNull(_outputFilePath);
+
+		File.WriteAllLines(_outputFilePath, output);
+		_userInterface.WriteMessage($"Output written to file {_outputFilePath} successfully.");
+	}
+}
