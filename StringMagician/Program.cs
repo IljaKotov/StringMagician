@@ -7,9 +7,9 @@ using StringMagician.UserInterfaces;
 using StringMagician.Utilities;
 
 var serviceProvider = new ServiceCollection()
-	.AddSingleton<IParser, ExpressionParser>()
-	.AddSingleton<IConverter, RpnConverter>()
-	.AddSingleton<IEvaluator, RpnEvaluator>()
+	.AddTransient<IParser, ExpressionParser>()
+	.AddTransient<IConverter, RpnConverter>()
+	.AddTransient<IEvaluator, RpnEvaluator>()
 	.AddSingleton<IEnumerable<IOperation>>(OperationFactory.CreateOperations())
 	.AddSingleton<IProcessorCore, ProcessorCore>()
 	.AddSingleton<IUserInterface, ConsoleUserInterface>()

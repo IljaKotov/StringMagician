@@ -12,8 +12,7 @@ internal class RpnConverter : IConverter
 	private const string LeftParenthesis = "(";
 	private const string RightParenthesis = ")";
 	private const int EmptyStack = 0;
-
-	private readonly List<string> _output;
+	private readonly Stack<string> _operators;
 	private readonly Dictionary<string, int> _operationPriorities;
 
 	/// <summary>
@@ -22,7 +21,7 @@ internal class RpnConverter : IConverter
 	/// <param name="operations">The list of operations to be used for conversion.</param>
 	public RpnConverter(IEnumerable<IOperation> operations)
 	{
-		_output = [];
+		_operators = new Stack<string>();
 
 		_operationPriorities = operations.ToDictionary(
 			op => op.Operator,
@@ -36,28 +35,26 @@ internal class RpnConverter : IConverter
 	/// <returns>A list of tokens in reverse polish notation.</returns>
 	public List<string> ConvertToRpn(IEnumerable<string> tokens)
 	{
-		_output.Clear();
-		var operators = new Stack<string>();
-
+		var output = new List<string>();
 		foreach (var token in tokens)
 		{
 			if (IsOperand(token))
-				_output.Add(token);
+				output.Add(token);
 
 			if (IsOperator(token))
-				ProcessOperators(operators, token);
+				ProcessOperators(token, output);
 
 			if (token is LeftParenthesis)
-				operators.Push(token);
+				_operators.Push(token);
 
 			if (token is RightParenthesis)
-				CloseParenthesis(operators, _output);
+				CloseParenthesis(output);
 		}
 
-		while (operators.Count is not EmptyStack)
-			_output.Add(operators.Pop());
+		while (_operators.Count is not EmptyStack)
+			output.Add(_operators.Pop());
 
-		return _output;
+		return output;
 	}
 
 	private int GetPriority(string op)
@@ -77,22 +74,22 @@ internal class RpnConverter : IConverter
 		return Regex.IsMatch(token, RegexPatterns.OperatorPattern);
 	}
 
-	private void ProcessOperators(Stack<string> operators, string token)
+	private void ProcessOperators(string token, List<string> output)
 	{
-		while (operators.Count is not EmptyStack && operators.Peek() is not LeftParenthesis &&
-			GetPriority(operators.Peek()) >= GetPriority(token))
+		while (_operators.Count is not EmptyStack && _operators.Peek() is not LeftParenthesis &&
+			GetPriority(_operators.Peek()) >= GetPriority(token))
 		{
-			_output.Add(operators.Pop());
+			output.Add(_operators.Pop());
 		}
 
-		operators.Push(token);
+		_operators.Push(token);
 	}
 
-	private static void CloseParenthesis(Stack<string> operators, List<string> output)
+	private void CloseParenthesis( List<string> output)
 	{
-		while (operators.Count is not EmptyStack && operators.Peek() is not LeftParenthesis)
-			output.Add(operators.Pop());
+		while (_operators.Count is not EmptyStack && _operators.Peek() is not LeftParenthesis)
+			output.Add(_operators.Pop());
 
-		operators.Pop();
+		_operators.Pop();
 	}
 }
