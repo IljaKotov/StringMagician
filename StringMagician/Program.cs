@@ -15,11 +15,9 @@ var serviceProvider = new ServiceCollection()
 	.AddSingleton<IUserInterface, ConsoleUserInterface>()
 	.AddSingleton<ConsoleHandler>()
 	.AddSingleton<FileHandler>()
+	.AddSingleton<ProcessorRunner>()
 	.BuildServiceProvider();
 
-var processorCore = serviceProvider.GetService<IProcessorCore>();
-
-ArgumentNullException.ThrowIfNull(processorCore);
-
-var runner = new ProcessorRunner(serviceProvider, processorCore);
+var runner = serviceProvider.GetService<ProcessorRunner>();
+ArgumentNullException.ThrowIfNull(runner);
 runner.Run();
