@@ -31,8 +31,6 @@ internal class ConsoleHandler : IHandler
 	/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
 	public IEnumerable<string> ReadInput()
 	{
-		var inputLines = new List<string>();
-
 		_userInterface.WriteMessage($"Enter expression or type '{ExitCommand}' to finish:");
 		var input = _userInterface.ReadInput();
 
@@ -42,13 +40,11 @@ internal class ConsoleHandler : IHandler
 		{
 			IsStopped = true;
 
-			return Array.Empty<string>();
+			yield break;
 		}
 
 		if (string.IsNullOrWhiteSpace(input) is false)
-			inputLines.Add(input);
-
-		return inputLines;
+			yield return input;
 	}
 
 	/// <summary>

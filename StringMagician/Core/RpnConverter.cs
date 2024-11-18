@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using StringMagician.Interfaces;
+﻿using StringMagician.Interfaces;
 using StringMagician.Utilities;
 
 namespace StringMagician.Core;
@@ -66,12 +65,12 @@ internal class RpnConverter : IConverter
 
 	private static bool IsOperand(string token)
 	{
-		return Regex.IsMatch(token, RegexPatterns.OperandPattern);
+		return RegexPatterns.OperandPattern.IsMatch(token);
 	}
 
 	private static bool IsOperator(string token)
 	{
-		return Regex.IsMatch(token, RegexPatterns.OperatorPattern);
+		return RegexPatterns.OperatorPattern.IsMatch(token);
 	}
 
 	private void ProcessOperators(string token, List<string> output)

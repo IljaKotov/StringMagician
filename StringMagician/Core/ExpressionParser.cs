@@ -17,7 +17,7 @@ internal class ExpressionParser : IParser
 	public List<string> Parse(string expression)
 	{
 		var tokens = new List<string>();
-		var regex = new Regex(RegexPatterns.FullPattern);
+		var regex = RegexPatterns.FullPattern;
 
 		foreach (Match match in regex.Matches(expression))
 			tokens.Add(match.Value);

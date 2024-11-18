@@ -41,13 +41,16 @@ internal class FileHandler : IHandler
 		{
 			IsStopped = true;
 
-			return Array.Empty<string>();
+			yield break;
 		}
 
 		if (File.Exists(inputFilePath) is false)
 			throw new FileNotFoundException("Input file not exist.");
 
-		return File.ReadAllLines(inputFilePath);
+		foreach (var line in File.ReadLines(inputFilePath))
+		{
+			yield return line;
+		}
 	}
 
 	/// <summary>
