@@ -1,6 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using StringMagician.Handlers;
-using StringMagician.Interfaces;
+﻿using StringMagician.Interfaces;
+using StringMagician.Utilities;
 
 namespace StringMagician;
 
@@ -9,18 +8,18 @@ namespace StringMagician;
 /// </summary>
 internal class ProcessorRunner
 {
-	private readonly IServiceProvider _serviceProvider;
 	private readonly IProcessorCore _processorCore;
+	private readonly HandlerFactory _handlerFactory;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="ProcessorRunner"/> class.
 	/// </summary>
-	/// <param name="serviceProvider">The service provider for dependency injection.</param>
+	/// <param name="handlerFactory">The factory for selecting the appropriate handler.</param>
 	/// <param name="processorCore">The core processor for handling input lines.</param>
-	public ProcessorRunner(IServiceProvider serviceProvider, IProcessorCore processorCore)
+	public ProcessorRunner(IProcessorCore processorCore, HandlerFactory handlerFactory)
 	{
-		_serviceProvider = serviceProvider;
 		_processorCore = processorCore;
+		_handlerFactory = handlerFactory;
 	}
 
 	/// <summary>
@@ -28,7 +27,7 @@ internal class ProcessorRunner
 	/// </summary>
 	public void Run()
 	{
-		var handler = SelectHandler();
+		var handler = _handlerFactory.SelectHandler();
 
 		ArgumentNullException.ThrowIfNull(handler);
 
@@ -42,23 +41,10 @@ internal class ProcessorRunner
 			handler.WriteOutput(results);
 		}
 	}
+	
 
-	private IHandler? SelectHandler()
+	private IEnumerable<string> ProcessInputLines(IEnumerable<string> inputLines)
 	{
-		var userInterface = _serviceProvider.GetService<IUserInterface>();
-		userInterface?.WriteMessage("Select mode: 1 for Interactive Mode, 2 for File Processing Mode");
-		var mode = userInterface?.ReadInput();
-
-		return mode switch
-		{
-			"1" => _serviceProvider.GetService<ConsoleHandler>(),
-			"2" => _serviceProvider.GetService<FileHandler>(),
-			_ => SelectHandler()
-		};
-	}
-
-	private List<string> ProcessInputLines(IEnumerable<string> inputLines)
-	{
-		return inputLines.Select(line => _processorCore.ProcessLine(line)).ToList();
+		return inputLines.Select(line => _processorCore.ProcessLine(line));
 	}
 }
