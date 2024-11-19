@@ -30,14 +30,14 @@ internal class RpnEvaluator : IEvaluator
 
 		foreach (var token in rpnTokens)
 		{
-			if (_operations.TryGetValue(token, out var value))
+			if (_operations.TryGetValue(token, out var operationResult ))
 			{
 				if (stack.Count < 2)
 					throw new InvalidOperationException("Insufficient operands.");
 
 				var operandRight = stack.Pop();
 				var operandLeft = stack.Pop();
-				var result = value.Execute(operandLeft, operandRight);
+				var result = operationResult.Execute(operandLeft, operandRight);
 				stack.Push(result);
 			}
 			else
