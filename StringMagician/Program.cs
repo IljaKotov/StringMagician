@@ -4,12 +4,14 @@ using StringMagician.Core;
 using StringMagician.Core.Handlers;
 using StringMagician.Handlers;
 using StringMagician.Interfaces;
+using StringMagician.Operations;
 using StringMagician.UserInterfaces;
 using StringMagician.Utilities;
 
 var serviceProvider = new ServiceCollection()
 	.AddTransient<IParser, ExpressionParser>()
 	.AddTransient<IEvaluator, RpnEvaluator>()
+	.AddSingleton<OperationContext>()
 	.AddSingleton<IEnumerable<IOperation>>(OperationFactory.CreateOperations())
 	.AddSingleton<IProcessorCore, ProcessorCore>()
 	.AddSingleton<IUserInterface, ConsoleUserInterface>()

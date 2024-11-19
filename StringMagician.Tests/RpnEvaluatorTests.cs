@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StringMagician.Core;
 using StringMagician.Core.Handlers;
 using StringMagician.Interfaces;
+using StringMagician.Operations;
 using StringMagician.Utilities;
 
 namespace StringMagician.Tests;
@@ -18,6 +19,7 @@ public class RpnEvaluatorTests
 	{
 		var serviceProvider = new ServiceCollection()
             .AddSingleton<IEnumerable<IOperation>>(_operations)
+			.AddSingleton<OperationContext>()
             .AddSingleton(provider =>
             {
                 var operations = provider.GetService<IEnumerable<IOperation>>();
@@ -55,7 +57,9 @@ public class RpnEvaluatorTests
             .BuildServiceProvider();
 
         _converter = serviceProvider.GetService<IConverter>() as RpnConverter;
-        _evaluator = new RpnEvaluator(_operations);
+		var context = serviceProvider.GetService<OperationContext>();
+		ArgumentNullException.ThrowIfNull(context);
+        _evaluator = new RpnEvaluator(_operations,context);
 	}
 
 	[Theory]
