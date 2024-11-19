@@ -22,6 +22,6 @@ public class RpnConverterTests
 	{
 		var tokens = _parser.Parse(testCase.Expression);
 		var rpnTokens = _converter.ConvertToRpn(tokens);
-		rpnTokens.Should().BeEquivalentTo(testCase.ExpectedRpnTokens);
+		rpnTokens.Should().BeEquivalentTo(testCase.ExpectedRpnTokens, options => options.WithStrictOrdering());
 	}
 }

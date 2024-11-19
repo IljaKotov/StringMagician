@@ -14,14 +14,11 @@ internal class ExpressionParser : IParser
 	/// </summary>
 	/// <param name="expression">The input expression to be parsed.</param>
 	/// <returns>A list of tokens extracted from the expression.</returns>
-	public List<string> Parse(string expression)
+	public IEnumerable<string> Parse(string expression)
 	{
-		var tokens = new List<string>();
 		var regex = RegexPatterns.FullPattern;
 
 		foreach (Match match in regex.Matches(expression))
-			tokens.Add(match.Value);
-
-		return tokens;
+			yield return match.Value;
 	}
 }

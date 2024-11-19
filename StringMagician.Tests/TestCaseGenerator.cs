@@ -145,7 +145,7 @@ internal static class TestCaseGenerator
 		{
 			Expression = "T+(Sunshine-n)*2",
 			ExpectedResult = "TSushieSushie",
-			ExpectedRpnTokens = ["T", "Sunshine", "n", "2", "*", "-", "+"]
+			ExpectedRpnTokens = ["T", "Sunshine", "n", "-", "2", "*", "+"]
 		};
 	}
 }
