@@ -1,4 +1,5 @@
-﻿using StringMagician.Interfaces;
+﻿using StringMagician.Core;
+using StringMagician.Interfaces;
 
 namespace StringMagician.Handlers;
 
@@ -58,14 +59,22 @@ internal class FileHandler : IHandler
 	/// </summary>
 	/// <param name="output">The collection of output lines to be written.</param>
 	/// <exception cref="ArgumentNullException">Thrown when the output file path is null.</exception>
-	public void WriteOutput(IEnumerable<string> output)
+	public void WriteOutput(IEnumerable<ProcessingResult> output)
 	{
 		_userInterface.WriteMessage("Enter output file path:");
 		var outputFilePath = _userInterface.ReadInput();
 
 		ArgumentNullException.ThrowIfNull(outputFilePath);
 
-		File.WriteAllLines(outputFilePath, output);
+		var formattedOutput = output.Select(FormatProcessingResult);
+		File.WriteAllLines(outputFilePath,formattedOutput);
 		_userInterface.WriteMessage($"Output written to file {outputFilePath} successfully.");
+	}
+	
+	private static string FormatProcessingResult(ProcessingResult result)
+	{
+		return string.IsNullOrWhiteSpace(result.ErrorMessage) ? 
+			$"Original expression: {result.OriginalOperation}\nResult: {result.Result}" :
+			$"Error processing expression: {result.OriginalOperation}\nError message: {result.ErrorMessage}";
 	}
 }

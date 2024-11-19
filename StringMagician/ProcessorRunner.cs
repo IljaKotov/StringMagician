@@ -1,4 +1,5 @@
-﻿using StringMagician.Interfaces;
+﻿using StringMagician.Core;
+using StringMagician.Interfaces;
 using StringMagician.Utilities;
 
 namespace StringMagician;
@@ -43,8 +44,9 @@ internal class ProcessorRunner
 	}
 	
 
-	private IEnumerable<string> ProcessInputLines(IEnumerable<string> inputLines)
+	private IEnumerable<ProcessingResult> ProcessInputLines(IEnumerable<string> inputLines)
 	{
 		return inputLines.Select(line => _processorCore.ProcessLine(line));
 	}
+	
 }

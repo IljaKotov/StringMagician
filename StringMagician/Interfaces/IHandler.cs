@@ -1,8 +1,10 @@
-﻿namespace StringMagician.Interfaces;
+﻿using StringMagician.Core;
+
+namespace StringMagician.Interfaces;
 
 internal interface IHandler
 {
 	bool IsStopped { get; }
 	IEnumerable<string> ReadInput();
-	void WriteOutput(IEnumerable<string> output);
+	void WriteOutput(IEnumerable<ProcessingResult> output);
 }

@@ -11,7 +11,7 @@ internal class RpnConverter : IConverter
 	private const string LeftParenthesis = "(";
 	private const string RightParenthesis = ")";
 	private const int EmptyStack = 0;
-	private readonly Stack<string> _operators;
+	private readonly Stack<string> _operators = new();
 	private readonly Dictionary<string, int> _operationPriorities;
 
 	/// <summary>
@@ -20,18 +20,16 @@ internal class RpnConverter : IConverter
 	/// <param name="operations">The list of operations to be used for conversion.</param>
 	public RpnConverter(IEnumerable<IOperation> operations)
 	{
-		_operators = new Stack<string>();
-
 		_operationPriorities = operations.ToDictionary(
 			op => op.Operator,
 			op => op.Priority);
 	}
 
 	/// <summary>
-	/// Converts a list of tokens to RPN.
+	/// Converts a list of tokens to Reverse Polish Notation.
 	/// </summary>
 	/// <param name="tokens">List of operands, parenthesis and operators in infix notation.</param>
-	/// <returns>A list of tokens in reverse polish notation.</returns>
+	/// <returns>A list of tokens in Reverse Polish Notation.</returns>
 	public List<string> ConvertToRpn(IEnumerable<string> tokens)
 	{
 		var output = new List<string>();

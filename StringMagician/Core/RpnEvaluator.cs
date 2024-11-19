@@ -19,9 +19,9 @@ internal class RpnEvaluator : IEvaluator
 	}
 
 	/// <summary>
-	/// Evaluate a list of RPN tokens to a single value.
+	/// Evaluate a list of Reverse Polish Notation tokens to a single value.
 	/// </summary>
-	/// <param name="rpnTokens">The list of tokens in RPN.</param>
+	/// <param name="rpnTokens">The list of tokens in Reverse Polish Notation.</param>
 	/// <returns>The result of the evaluation.</returns>
 	/// <exception cref="InvalidOperationException">Thrown when the expression is malformed or there are insufficient operands.</exception>
 	public string Evaluate(List<string> rpnTokens)

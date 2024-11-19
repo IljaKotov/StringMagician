@@ -1,4 +1,5 @@
-﻿using StringMagician.Interfaces;
+﻿using StringMagician.Core;
+using StringMagician.Interfaces;
 
 namespace StringMagician.Handlers;
 
@@ -51,11 +52,18 @@ internal class ConsoleHandler : IHandler
 	/// Writes output to the console.
 	/// </summary>
 	/// <param name="output">The collection of output lines to be written.</param>
-	public void WriteOutput(IEnumerable<string> output)
+	public void WriteOutput(IEnumerable<ProcessingResult> output)
 	{
-		foreach (var line in output)
+		foreach (var result in output)
 		{
-			_userInterface.WriteMessage(line);
+			_userInterface.WriteMessage(FormatProcessingResult(result));
 		}
+	}
+	
+	private static string FormatProcessingResult(ProcessingResult result)
+	{
+		return string.IsNullOrWhiteSpace(result.ErrorMessage) ? 
+			$"Original expression: {result.OriginalOperation}\nResult: {result.Result}" :
+			$"Error processing expression: {result.OriginalOperation}\nError message: {result.ErrorMessage}";
 	}
 }

@@ -15,8 +15,8 @@ internal class ProcessorCore : IProcessorCore
 	/// Initializes a new instance of the <see cref="ProcessorCore"/> class.
 	/// </summary>
 	/// <param name="parser">The parser to be used for parsing expressions.</param>
-	/// <param name="converter">The converter to be used for converting expressions to RPN.</param>
-	/// <param name="evaluator">The evaluator to be used for evaluating RPN expressions.</param>
+	/// <param name="converter">The converter to be used for converting expressions to Reverse Polish Notation.</param>
+	/// <param name="evaluator">The evaluator to be used for evaluating Reverse Polish Notation expressions.</param>
 	public ProcessorCore(IParser parser,
 		IConverter converter,
 		IEvaluator evaluator)
@@ -31,7 +31,7 @@ internal class ProcessorCore : IProcessorCore
 	/// </summary>
 	/// <param name="line">The input line to be processed.</param>
 	/// <returns>The result of the processing.</returns>
-	public string ProcessLine(string line)
+	public ProcessingResult ProcessLine(string line)
 	{
 		try
 		{
@@ -41,11 +41,11 @@ internal class ProcessorCore : IProcessorCore
 
 			var result = _evaluator.Evaluate(rpnTokens);
 
-			return $"Original operation: {line}\nResult: {result}";
+			return new ProcessingResult(line, result, string.Empty);
 		}
 		catch (Exception ex)
 		{
-			return $"Original operation: {line}\nResult: Error - {ex.Message}";
+			return new ProcessingResult(line, string.Empty, ex.Message);
 		}
 	}
 }
