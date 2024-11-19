@@ -4,5 +4,5 @@ namespace StringMagician.Interfaces;
 
 internal interface IProcessorCore
 {
-	ProcessingResult ProcessLine(string line);
+	Task<ProcessingResult> ProcessLine(string line);
 }

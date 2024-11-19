@@ -31,15 +31,15 @@ internal class ProcessorCore : IProcessorCore
 	/// </summary>
 	/// <param name="line">The input line to be processed.</param>
 	/// <returns>The result of the processing.</returns>
-	public ProcessingResult ProcessLine(string line)
+	public async Task<ProcessingResult> ProcessLine(string line)
 	{
 		try
 		{
-			var tokens = _parser.Parse(line);
+			var tokens = _parser.ParseAsync(line);
 
-			var rpnTokens = _converter.ConvertToRpn(tokens);
+			var rpnTokens = _converter.ConvertToRpnAsync(tokens);
 
-			var result = _evaluator.Evaluate(rpnTokens);
+			var result = await _evaluator.EvaluateAsync(rpnTokens);
 
 			return new ProcessingResult(line, result, string.Empty);
 		}

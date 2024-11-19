@@ -9,12 +9,15 @@ internal class HandlerFactory
 	private readonly ConsoleHandler _consoleHandler;
 	private readonly FileHandler _fileHandler;
 
-	public HandlerFactory(IUserInterface userInterface, ConsoleHandler consoleHandler, FileHandler fileHandler)
+	public HandlerFactory(IUserInterface userInterface,
+		ConsoleHandler consoleHandler,
+		FileHandler fileHandler)
 	{
 		_userInterface = userInterface;
 		_consoleHandler = consoleHandler;
 		_fileHandler = fileHandler;
 	}
+
 	public IHandler SelectHandler()
 	{
 		_userInterface.WriteMessage("Select mode: 1 for Interactive Mode, 2 for File Processing Mode");

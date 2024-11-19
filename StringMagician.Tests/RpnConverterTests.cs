@@ -21,6 +21,7 @@ public class RpnConverterTests
 			{
 				var operations = provider.GetService<IEnumerable<IOperation>>();
 				ArgumentNullException.ThrowIfNull(operations);
+
 				return operations.ToDictionary(op => op.Operator, op => op.Priority);
 			})
 			.AddTransient<OperandHandler>()
@@ -28,6 +29,7 @@ public class RpnConverterTests
 			{
 				var operationPriorities = provider.GetService<Dictionary<string, int>>();
 				ArgumentNullException.ThrowIfNull(operationPriorities);
+
 				return new OperatorHandler(operationPriorities);
 			})
 			.AddTransient<LeftParenthesisHandler>()
@@ -52,16 +54,24 @@ public class RpnConverterTests
 			})
 			.AddTransient<IConverter, RpnConverter>()
 			.BuildServiceProvider();
-		
+
 		_converter = serviceProvider.GetService<IConverter>() as RpnConverter;
 	}
 
 	[Theory]
 	[MemberData(nameof(TestCaseGenerator.GetTestData), MemberType = typeof(TestCaseGenerator))]
-	public void TestRpnConversion(TestCase testCase)
+	public async Task TestRpnConversion(TestCase testCase)
 	{
-		var tokens = _parser.Parse(testCase.Expression);
-		var rpnTokens = _converter?.ConvertToRpn(tokens);
+		var tokens = await _parser.ParseAsync(testCase.Expression).ToListAsync();
+
+		var rpnTokens = new List<string>();
+		ArgumentNullException.ThrowIfNull(_converter);
+
+		await foreach (var rpnToken in _converter.ConvertToRpnAsync(tokens.ToAsyncEnumerable()).ConfigureAwait(false))
+		{
+			rpnTokens.Add(rpnToken);
+		}
+
 		rpnTokens.Should().BeEquivalentTo(testCase.ExpectedRpnTokens, options => options.WithStrictOrdering());
 	}
 }

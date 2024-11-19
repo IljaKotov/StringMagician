@@ -18,63 +18,71 @@ public class RpnEvaluatorTests
 	public RpnEvaluatorTests()
 	{
 		var serviceProvider = new ServiceCollection()
-            .AddSingleton<IEnumerable<IOperation>>(_operations)
+			.AddSingleton<IEnumerable<IOperation>>(_operations)
 			.AddSingleton<OperationContext>()
-            .AddSingleton(provider =>
-            {
-                var operations = provider.GetService<IEnumerable<IOperation>>();
-                ArgumentNullException.ThrowIfNull(operations);
-                return operations.ToDictionary(op => op.Operator, op => op.Priority);
-            })
-            .AddTransient<OperandHandler>()
-            .AddTransient<OperatorHandler>(provider =>
-            {
-                var operationPriorities = provider.GetService<Dictionary<string, int>>();
-                ArgumentNullException.ThrowIfNull(operationPriorities);
-                return new OperatorHandler(operationPriorities);
-            })
-            .AddTransient<LeftParenthesisHandler>()
-            .AddTransient<RightParenthesisHandler>()
-            .AddSingleton<IChainHandler>(provider =>
-            {
-                var operandHandler = provider.GetService<OperandHandler>();
-                var operatorHandler = provider.GetService<OperatorHandler>();
-                var leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
-                var rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
+			.AddSingleton(provider =>
+			{
+				var operations = provider.GetService<IEnumerable<IOperation>>();
+				ArgumentNullException.ThrowIfNull(operations);
 
-                ArgumentNullException.ThrowIfNull(operandHandler);
-                ArgumentNullException.ThrowIfNull(operatorHandler);
-                ArgumentNullException.ThrowIfNull(leftParenthesisHandler);
-                ArgumentNullException.ThrowIfNull(rightParenthesisHandler);
+				return operations.ToDictionary(op => op.Operator, op => op.Priority);
+			})
+			.AddTransient<OperandHandler>()
+			.AddTransient<OperatorHandler>(provider =>
+			{
+				var operationPriorities = provider.GetService<Dictionary<string, int>>();
+				ArgumentNullException.ThrowIfNull(operationPriorities);
 
-                operandHandler.SetNext(operatorHandler)
-                    .SetNext(leftParenthesisHandler)
-                    .SetNext(rightParenthesisHandler);
+				return new OperatorHandler(operationPriorities);
+			})
+			.AddTransient<LeftParenthesisHandler>()
+			.AddTransient<RightParenthesisHandler>()
+			.AddSingleton<IChainHandler>(provider =>
+			{
+				var operandHandler = provider.GetService<OperandHandler>();
+				var operatorHandler = provider.GetService<OperatorHandler>();
+				var leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
+				var rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
 
-                return operandHandler;
-            })
-            .AddTransient<IConverter, RpnConverter>()
-            .BuildServiceProvider();
+				ArgumentNullException.ThrowIfNull(operandHandler);
+				ArgumentNullException.ThrowIfNull(operatorHandler);
+				ArgumentNullException.ThrowIfNull(leftParenthesisHandler);
+				ArgumentNullException.ThrowIfNull(rightParenthesisHandler);
 
-        _converter = serviceProvider.GetService<IConverter>() as RpnConverter;
+				operandHandler.SetNext(operatorHandler)
+					.SetNext(leftParenthesisHandler)
+					.SetNext(rightParenthesisHandler);
+
+				return operandHandler;
+			})
+			.AddTransient<IConverter, RpnConverter>()
+			.BuildServiceProvider();
+
+		_converter = serviceProvider.GetService<IConverter>() as RpnConverter;
 		var context = serviceProvider.GetService<OperationContext>();
 		ArgumentNullException.ThrowIfNull(context);
-        _evaluator = new RpnEvaluator(_operations,context);
+		_evaluator = new RpnEvaluator(_operations, context);
 	}
 
 	[Theory]
 	[MemberData(nameof(TestCaseGenerator.GetTestData), MemberType = typeof(TestCaseGenerator))]
-	public void TestOperations(TestCase testCase)
+	public async Task TestOperations(TestCase testCase)
 	{
-		var result = Evaluate(testCase.Expression);
+		var result = await EvaluateAsync(testCase.Expression);
 		result.Should().Be(testCase.ExpectedResult);
 	}
 
-	private string Evaluate(string expression)
+	private async Task<string> EvaluateAsync(string expression)
 	{
-		var tokens = _parser.Parse(expression);
-		var rpnTokens = _converter?.ConvertToRpn(tokens);
-		ArgumentNullException.ThrowIfNull(rpnTokens);
-		return _evaluator.Evaluate(rpnTokens);
+		var tokens = await _parser.ParseAsync(expression).ToListAsync();
+		var rpnTokens = new List<string>();
+		ArgumentNullException.ThrowIfNull(_converter);
+
+		await foreach (var rpnToken in _converter.ConvertToRpnAsync(tokens.ToAsyncEnumerable()).ConfigureAwait(false))
+		{
+			rpnTokens.Add(rpnToken);
+		}
+
+		return await _evaluator.EvaluateAsync(rpnTokens.ToAsyncEnumerable());
 	}
 }

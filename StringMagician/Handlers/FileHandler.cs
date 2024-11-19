@@ -26,55 +26,93 @@ internal class FileHandler : IHandler
 	}
 
 	/// <summary>
-	/// Reads input from a file.
+	/// Reads input from a file asynchronously.
 	/// </summary>
 	/// <returns>A collection of input lines.</returns>
 	/// <exception cref="ArgumentNullException">Thrown when the input file path is null.</exception>
 	/// <exception cref="FileNotFoundException">Thrown when the input file does not exist.</exception>
-	public IEnumerable<string> ReadInput()
+	public async IAsyncEnumerable<string> ReadInputAsync()
+	{
+		while (true)
+		{
+			var inputFilePath = GetInputFilePath();
+
+			if (CheckForExitCommand(inputFilePath))
+				yield break;
+
+			await foreach (var line in ReadLinesFromFileAsync(inputFilePath))
+				yield return line;
+		}
+	}
+
+	/// <summary>
+	/// Writes output to a file asynchronously.
+	/// </summary>
+	/// <param name="output">The collection of output lines to be written.</param>
+	/// <exception cref="ArgumentNullException">Thrown when the output file path is null.</exception>
+	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output)
+	{
+		var outputFilePath = GetOutputFilePath();
+		var formattedOutput = FormatOutput(output);
+		await WriteLinesToFileAsync(outputFilePath, formattedOutput);
+	}
+
+	private string GetInputFilePath()
 	{
 		_userInterface.WriteMessage($"Enter the path of the input file or type '{ExitCommand}' to finish:");
 		var inputFilePath = _userInterface.ReadInput();
-
 		ArgumentNullException.ThrowIfNull(inputFilePath);
 
-		if (inputFilePath.Equals(ExitCommand, StringComparison.CurrentCultureIgnoreCase))
-		{
-			IsStopped = true;
+		return inputFilePath;
+	}
 
-			yield break;
-		}
+	private bool CheckForExitCommand(string inputFilePath)
+	{
+		if (inputFilePath.Equals(ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
+			return false;
 
+		IsStopped = true;
+
+		return true;
+	}
+
+	private static async IAsyncEnumerable<string> ReadLinesFromFileAsync(string inputFilePath)
+	{
 		if (File.Exists(inputFilePath) is false)
-			throw new FileNotFoundException("Input file not exist.");
+			throw new FileNotFoundException("Input file does not exist.");
 
-		foreach (var line in File.ReadLines(inputFilePath))
+		using var reader = new StreamReader(inputFilePath);
+
+		while (await reader.ReadLineAsync() is { } line)
 		{
 			yield return line;
 		}
 	}
 
-	/// <summary>
-	/// Writes output to a file.
-	/// </summary>
-	/// <param name="output">The collection of output lines to be written.</param>
-	/// <exception cref="ArgumentNullException">Thrown when the output file path is null.</exception>
-	public void WriteOutput(IEnumerable<ProcessingResult> output)
+	private string GetOutputFilePath()
 	{
 		_userInterface.WriteMessage("Enter output file path:");
 		var outputFilePath = _userInterface.ReadInput();
-
 		ArgumentNullException.ThrowIfNull(outputFilePath);
 
-		var formattedOutput = output.Select(FormatProcessingResult);
-		File.WriteAllLines(outputFilePath,formattedOutput);
+		return outputFilePath;
+	}
+
+	private static IEnumerable<string> FormatOutput(IEnumerable<ProcessingResult> output)
+	{
+		return output.Select(FormatProcessingResult);
+	}
+
+	private async Task WriteLinesToFileAsync(string outputFilePath, IEnumerable<string> lines)
+	{
+		await File.WriteAllLinesAsync(outputFilePath, lines);
 		_userInterface.WriteMessage($"Output written to file {outputFilePath} successfully.");
 	}
-	
+
 	private static string FormatProcessingResult(ProcessingResult result)
 	{
-		return string.IsNullOrWhiteSpace(result.ErrorMessage) ? 
-			$"Original expression: {result.OriginalOperation}\nResult: {result.Result}" :
-			$"Error processing expression: {result.OriginalOperation}\nError message: {result.ErrorMessage}";
+		return string.IsNullOrWhiteSpace(result.ErrorMessage)
+			? $"Original expression: {result.OriginalOperation}\nResult: {result.Result}"
+			: $"Error processing expression: {result.OriginalOperation}\nError message: {result.ErrorMessage}";
 	}
 }

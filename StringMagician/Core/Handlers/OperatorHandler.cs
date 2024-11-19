@@ -2,7 +2,7 @@
 
 namespace StringMagician.Core.Handlers;
 
-internal class OperatorHandler: AbstractChainHandler
+internal class OperatorHandler : AbstractChainHandler
 {
 	private readonly IDictionary<string, int> _operationPriorities;
 
@@ -10,8 +10,10 @@ internal class OperatorHandler: AbstractChainHandler
 	{
 		_operationPriorities = operationPriorities;
 	}
-	
-	public override void Handle(string token, List<string> output, Stack<string> operators)
+
+	public override void Handle(string token,
+		List<string> output,
+		Stack<string> operators)
 	{
 		if (RegexPatterns.OperatorPattern.IsMatch(token))
 		{
@@ -20,6 +22,7 @@ internal class OperatorHandler: AbstractChainHandler
 			{
 				output.Add(operators.Pop());
 			}
+
 			operators.Push(token);
 		}
 		else

@@ -2,5 +2,5 @@
 
 internal interface IEvaluator
 {
-	string Evaluate(List<string> rpnTokens);
+	Task<string> EvaluateAsync(IAsyncEnumerable<string> rpnTokens);
 }

@@ -1,8 +1,10 @@
 ﻿namespace StringMagician.Core.Handlers;
 
-internal class RightParenthesisHandler: AbstractChainHandler
+internal class RightParenthesisHandler : AbstractChainHandler
 {
-	public override void Handle(string token, List<string> output, Stack<string> operators)
+	public override void Handle(string token,
+		List<string> output,
+		Stack<string> operators)
 	{
 		if (token is RightParenthesis)
 		{
@@ -10,6 +12,7 @@ internal class RightParenthesisHandler: AbstractChainHandler
 			{
 				output.Add(operators.Pop());
 			}
+
 			operators.Pop();
 		}
 		else

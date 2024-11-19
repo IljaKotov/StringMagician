@@ -1,5 +1,4 @@
-﻿using StringMagician.Core;
-using StringMagician.Interfaces;
+﻿using StringMagician.Interfaces;
 using StringMagician.Utilities;
 
 namespace StringMagician;
@@ -26,27 +25,22 @@ internal class ProcessorRunner
 	/// <summary>
 	/// Runs the processor by reading input, processing it, and writing output.
 	/// </summary>
-	public void Run()
+	public async Task RunAsync()
 	{
 		var handler = _handlerFactory.SelectHandler();
-
 		ArgumentNullException.ThrowIfNull(handler);
 
-		while (true)
+		await foreach (var line in handler.ReadInputAsync())
 		{
-			var inputLines = handler.ReadInput();
+			if (handler.IsStopped)
+				break;
 
-			if (handler.IsStopped) break;
+			var result = await _processorCore.ProcessLine(line);
 
-			var results = ProcessInputLines(inputLines);
-			handler.WriteOutput(results);
+			await handler.WriteOutputAsync(new[]
+			{
+				result
+			});
 		}
 	}
-	
-
-	private IEnumerable<ProcessingResult> ProcessInputLines(IEnumerable<string> inputLines)
-	{
-		return inputLines.Select(line => _processorCore.ProcessLine(line));
-	}
-	
 }

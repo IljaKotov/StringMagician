@@ -23,6 +23,7 @@ var serviceProvider = new ServiceCollection()
 	{
 		var operations = provider.GetService<IEnumerable<IOperation>>();
 		ArgumentNullException.ThrowIfNull(operations);
+
 		return operations.ToDictionary(op => op.Operator, op => op.Priority);
 	})
 	.AddTransient<OperandHandler>()
@@ -58,4 +59,4 @@ var serviceProvider = new ServiceCollection()
 
 var runner = serviceProvider.GetService<ProcessorRunner>();
 ArgumentNullException.ThrowIfNull(runner);
-runner.Run();
+await runner.RunAsync();
