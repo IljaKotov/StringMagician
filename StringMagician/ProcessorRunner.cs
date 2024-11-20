@@ -1,5 +1,4 @@
 ﻿using StringMagician.Interfaces;
-using StringMagician.Utilities;
 
 namespace StringMagician;
 
@@ -9,14 +8,14 @@ namespace StringMagician;
 internal class ProcessorRunner
 {
 	private readonly IProcessorCore _processorCore;
-	private readonly HandlerFactory _handlerFactory;
+	private readonly IHandlerFactory _handlerFactory;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="ProcessorRunner"/> class.
 	/// </summary>
 	/// <param name="handlerFactory">The factory for selecting the appropriate handler.</param>
 	/// <param name="processorCore">The core processor for handling input lines.</param>
-	public ProcessorRunner(IProcessorCore processorCore, HandlerFactory handlerFactory)
+	public ProcessorRunner(IProcessorCore processorCore, IHandlerFactory handlerFactory)
 	{
 		_processorCore = processorCore;
 		_handlerFactory = handlerFactory;
@@ -37,10 +36,7 @@ internal class ProcessorRunner
 
 			var result = await _processorCore.ProcessLine(line);
 
-			await handler.WriteOutputAsync(new[]
-			{
-				result
-			});
+			await handler.WriteOutputAsync([result]);
 		}
 	}
 }

@@ -17,7 +17,7 @@ var serviceProvider = new ServiceCollection()
 	.AddSingleton<IUserInterface, ConsoleUserInterface>()
 	.AddSingleton<ConsoleHandler>()
 	.AddSingleton<FileHandler>()
-	.AddSingleton<HandlerFactory>()
+	.AddSingleton<IHandlerFactory, HandlerFactory>()
 	.AddSingleton<ProcessorRunner>()
 	.AddSingleton(provider =>
 	{

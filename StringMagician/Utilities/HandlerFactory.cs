@@ -3,7 +3,7 @@ using StringMagician.Interfaces;
 
 namespace StringMagician.Utilities;
 
-internal class HandlerFactory
+internal class HandlerFactory: IHandlerFactory
 {
 	private readonly IUserInterface _userInterface;
 	private readonly ConsoleHandler _consoleHandler;
