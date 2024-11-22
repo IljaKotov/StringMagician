@@ -1,4 +1,6 @@
-﻿using StringMagician.Interfaces;
+﻿using Microsoft.Extensions.Options;
+using StringMagician.Configuration;
+using StringMagician.Interfaces;
 using StringMagician.Operations;
 
 namespace StringMagician.Core;
@@ -10,16 +12,21 @@ internal class RpnEvaluator : IEvaluator
 {
 	private readonly IDictionary<string, IOperation> _operations;
 	private readonly OperationContext _context;
+	private readonly CoreSettings _settings;
 
 	/// <summary>
 	/// Initialize a new instance of <see cref="RpnEvaluator"/> with the given operations and context.
 	/// </summary>
 	/// <param name="operations">The list of operations to be used for evaluation.</param>
 	/// <param name="context">The operation context to be used for evaluation.</param>
-	public RpnEvaluator(IEnumerable<IOperation> operations, OperationContext context)
+	/// <param name="coreSettings">The configuration to be used.</param>
+	public RpnEvaluator(IEnumerable<IOperation> operations,
+		OperationContext context,
+		IOptions<CoreSettings> coreSettings)
 	{
 		_operations = operations.ToDictionary(op => op.Operator, op => op);
 		_context = context;
+		_settings = coreSettings.Value;
 	}
 
 	/// <summary>
@@ -56,8 +63,8 @@ internal class RpnEvaluator : IEvaluator
 
 	private async Task ExecuteOperationAsync(Stack<string> stack, IOperation operation)
 	{
-		if (stack.Count < 2)
-			throw new InvalidOperationException("Insufficient operands.");
+		if (stack.Count < _settings.MinimumOperands)
+			throw new InvalidOperationException(_settings.InsufficientOperands);
 
 		var operandRight = stack.Pop();
 		var operandLeft = stack.Pop();
@@ -66,9 +73,9 @@ internal class RpnEvaluator : IEvaluator
 		stack.Push(result);
 	}
 
-	private static void ValidateFinalStack(Stack<string> stack)
+	private void ValidateFinalStack(Stack<string> stack)
 	{
-		if (stack.Count != 1)
-			throw new InvalidOperationException("Malformed expression.");
+		if (stack.Count != _settings.FinalStackCount)
+			throw new InvalidOperationException(_settings.MalformedExpression);
 	}
 }

@@ -1,67 +1,26 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using StringMagician.Configuration;
 using StringMagician.Core;
-using StringMagician.Core.Handlers;
 using StringMagician.Interfaces;
 using StringMagician.Operations;
-using StringMagician.Utilities;
 
 namespace StringMagician.Tests;
 
-public class RpnEvaluatorTests
+public class RpnEvaluatorTests : TestBase
 {
-	private readonly List<IOperation> _operations = OperationFactory.CreateOperations();
-	private readonly ExpressionParser _parser = new();
 	private readonly RpnConverter? _converter;
 	private readonly RpnEvaluator _evaluator;
 
 	public RpnEvaluatorTests()
 	{
-		var serviceProvider = new ServiceCollection()
-			.AddSingleton<IEnumerable<IOperation>>(_operations)
-			.AddSingleton<OperationContext>()
-			.AddSingleton(provider =>
-			{
-				var operations = provider.GetService<IEnumerable<IOperation>>();
-				ArgumentNullException.ThrowIfNull(operations);
-
-				return operations.ToDictionary(op => op.Operator, op => op.Priority);
-			})
-			.AddTransient<OperandHandler>()
-			.AddTransient<OperatorHandler>(provider =>
-			{
-				var operationPriorities = provider.GetService<Dictionary<string, int>>();
-				ArgumentNullException.ThrowIfNull(operationPriorities);
-
-				return new OperatorHandler(operationPriorities);
-			})
-			.AddTransient<LeftParenthesisHandler>()
-			.AddTransient<RightParenthesisHandler>()
-			.AddSingleton<IChainHandler>(provider =>
-			{
-				var operandHandler = provider.GetService<OperandHandler>();
-				var operatorHandler = provider.GetService<OperatorHandler>();
-				var leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
-				var rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
-
-				ArgumentNullException.ThrowIfNull(operandHandler);
-				ArgumentNullException.ThrowIfNull(operatorHandler);
-				ArgumentNullException.ThrowIfNull(leftParenthesisHandler);
-				ArgumentNullException.ThrowIfNull(rightParenthesisHandler);
-
-				operandHandler.SetNext(operatorHandler)
-					.SetNext(leftParenthesisHandler)
-					.SetNext(rightParenthesisHandler);
-
-				return operandHandler;
-			})
-			.AddTransient<IConverter, RpnConverter>()
-			.BuildServiceProvider();
-
-		_converter = serviceProvider.GetService<IConverter>() as RpnConverter;
-		var context = serviceProvider.GetService<OperationContext>();
+		_converter = ServiceProvider.GetService<IConverter>() as RpnConverter;
+		var context = ServiceProvider.GetService<OperationContext>();
 		ArgumentNullException.ThrowIfNull(context);
-		_evaluator = new RpnEvaluator(_operations, context);
+
+		_evaluator = new RpnEvaluator(Operations, context,
+			ServiceProvider.GetService<IOptions<CoreSettings>>() ?? throw new InvalidOperationException());
 	}
 
 	[Theory]
@@ -74,7 +33,7 @@ public class RpnEvaluatorTests
 
 	private async Task<string> EvaluateAsync(string expression)
 	{
-		var tokens = await _parser.ParseAsync(expression).ToListAsync();
+		var tokens = await Parser.ParseAsync(expression).ToListAsync();
 		var rpnTokens = new List<string>();
 		ArgumentNullException.ThrowIfNull(_converter);
 

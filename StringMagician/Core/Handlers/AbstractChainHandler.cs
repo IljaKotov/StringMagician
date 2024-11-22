@@ -5,9 +5,6 @@ namespace StringMagician.Core.Handlers;
 internal abstract class AbstractChainHandler : IChainHandler
 {
 	private IChainHandler? _nextHandler;
-	protected const string LeftParenthesis = "(";
-	protected const string RightParenthesis = ")";
-	protected const int EmptyStack = 0;
 
 	public IChainHandler SetNext(IChainHandler handler)
 	{

@@ -9,7 +9,6 @@ public class ProcessorRunnerTests
 	[Fact]
 	public async Task RunAsync_ShouldProcessLinesCorrectly()
 	{
-		// Arrange
 		var mockProcessorCore = Substitute.For<IProcessorCore>();
 		var mockHandler = Substitute.For<IHandler>();
 		var mockHandlerFactory = Substitute.For<IHandlerFactory>();
@@ -21,13 +20,11 @@ public class ProcessorRunnerTests
 			.Returns(Task.FromResult(new ProcessingResult("Line", "Processed", string.Empty)));
 
 		mockHandlerFactory.SelectHandler().Returns(mockHandler);
-		
+
 		var runner = new ProcessorRunner(mockProcessorCore, mockHandlerFactory);
 
-		// Act
 		await runner.RunAsync();
 
-		// Assert
 		await foreach (var line in GetTestLines())
 		{
 			await mockProcessorCore.Received().ProcessLine(line);

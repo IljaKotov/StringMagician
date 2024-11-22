@@ -1,4 +1,6 @@
-﻿using StringMagician.Core;
+﻿using Microsoft.Extensions.Options;
+using StringMagician.Configuration;
+using StringMagician.Core;
 using StringMagician.Interfaces;
 
 namespace StringMagician.Handlers;
@@ -8,8 +10,8 @@ namespace StringMagician.Handlers;
 /// </summary>
 internal class ConsoleHandler : IHandler
 {
-	private const string ExitCommand = "exit";
 	private readonly IUserInterface _userInterface;
+	private readonly HandlerSettings _settings;
 
 	/// <summary>
 	/// Gets a value indicating whether the application is stopped.
@@ -20,9 +22,12 @@ internal class ConsoleHandler : IHandler
 	/// Initializes a new instance of the <see cref="ConsoleHandler"/> class.
 	/// </summary>
 	/// <param name="userInterface">The user interface to be used.</param>
-	public ConsoleHandler(IUserInterface userInterface)
+	/// <param name="handlerSettings">The configuration to be used.</param>
+	public ConsoleHandler(IUserInterface userInterface,
+		IOptions<HandlerSettings> handlerSettings)
 	{
 		_userInterface = userInterface;
+		_settings = handlerSettings.Value;
 	}
 
 	/// <summary>
@@ -32,7 +37,7 @@ internal class ConsoleHandler : IHandler
 	/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
 	public async IAsyncEnumerable<string> ReadInputAsync()
 	{
-		while (true)
+		while (IsStopped is false)
 		{
 			var input = await GetInputAsync();
 
@@ -58,7 +63,11 @@ internal class ConsoleHandler : IHandler
 
 	private async Task<string> GetInputAsync()
 	{
-		_userInterface.WriteMessage($"Enter expression or type '{ExitCommand}' to finish:");
+		var enterTemplate = _settings.EnterConsoleTemplate;
+		var enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
+
+		_userInterface.WriteMessage(enterMessage);
+
 		var input = await Task.Run(() => _userInterface.ReadInput());
 		ArgumentNullException.ThrowIfNull(input);
 
@@ -67,10 +76,11 @@ internal class ConsoleHandler : IHandler
 
 	private bool CheckForExitCommand(string input)
 	{
-		if (input.Equals(ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
+		if (input.Equals(_settings.ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
 			return false;
 
 		IsStopped = true;
+		_userInterface.WriteMessage(_settings.GoodBye);
 
 		return true;
 	}
@@ -80,10 +90,13 @@ internal class ConsoleHandler : IHandler
 		await Task.Run(() => _userInterface.WriteMessage(message));
 	}
 
-	private static string FormatProcessingResult(ProcessingResult result)
+	private string FormatProcessingResult(ProcessingResult result)
 	{
+		var resultTemplate = _settings.ResultConsoleMessage;
+		var errorMessage = _settings.ErrorConsoleMessage;
+
 		return string.IsNullOrWhiteSpace(result.ErrorMessage)
-			? $"Original expression: {result.OriginalOperation}\nResult: {result.Result}"
-			: $"Error processing expression: {result.OriginalOperation}\nError message: {result.ErrorMessage}";
+			? string.Format(resultTemplate, result.OriginalOperation, result.Result)
+			: string.Format(errorMessage, result.OriginalOperation, result.ErrorMessage);
 	}
 }

@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using StringMagician;
+using StringMagician.Configuration;
 using StringMagician.Core;
 using StringMagician.Core.Handlers;
 using StringMagician.Handlers;
@@ -8,11 +11,26 @@ using StringMagician.Operations;
 using StringMagician.UserInterfaces;
 using StringMagician.Utilities;
 
+var configuration = new ConfigurationBuilder()
+	.SetBasePath(Directory.GetCurrentDirectory())
+	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+	.Build();
+
 var serviceProvider = new ServiceCollection()
+	.AddSingleton<IConfiguration>(configuration)
+	.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind)
+	.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind)
+	.Configure<List<OperationSettings>>(configuration.GetSection("Settings:Operations").Bind)
 	.AddTransient<IParser, ExpressionParser>()
 	.AddTransient<IEvaluator, RpnEvaluator>()
 	.AddSingleton<OperationContext>()
-	.AddSingleton<IEnumerable<IOperation>>(OperationFactory.CreateOperations())
+	.AddSingleton<IEnumerable<IOperation>>(provider =>
+	{
+		var operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
+		ArgumentNullException.ThrowIfNull(operationSettings);
+
+		return OperationFactory.CreateOperations(operationSettings);
+	})
 	.AddSingleton<IProcessorCore, ProcessorCore>()
 	.AddSingleton<IUserInterface, ConsoleUserInterface>()
 	.AddSingleton<ConsoleHandler>()
@@ -30,9 +48,11 @@ var serviceProvider = new ServiceCollection()
 	.AddTransient<OperatorHandler>(provider =>
 	{
 		var operationsPriorities = provider.GetService<Dictionary<string, int>>();
+		var coreSettings = provider.GetService<IOptions<CoreSettings>>();
 		ArgumentNullException.ThrowIfNull(operationsPriorities);
+		ArgumentNullException.ThrowIfNull(coreSettings);
 
-		return new OperatorHandler(operationsPriorities);
+		return new OperatorHandler(operationsPriorities, coreSettings);
 	})
 	.AddTransient<LeftParenthesisHandler>()
 	.AddTransient<RightParenthesisHandler>()

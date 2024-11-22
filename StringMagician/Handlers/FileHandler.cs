@@ -1,4 +1,6 @@
-﻿using StringMagician.Core;
+﻿using Microsoft.Extensions.Options;
+using StringMagician.Configuration;
+using StringMagician.Core;
 using StringMagician.Interfaces;
 
 namespace StringMagician.Handlers;
@@ -8,8 +10,8 @@ namespace StringMagician.Handlers;
 /// </summary>
 internal class FileHandler : IHandler
 {
-	private const string ExitCommand = "exit";
 	private readonly IUserInterface _userInterface;
+	private readonly HandlerSettings _settings;
 
 	/// <summary>
 	/// Gets a value indicating whether the application is stopped.
@@ -20,9 +22,12 @@ internal class FileHandler : IHandler
 	/// Initializes a new instance of the <see cref="FileHandler"/> class.
 	/// </summary>
 	/// <param name="userInterface">The user interface to be used for input and output operations.</param>
-	public FileHandler(IUserInterface userInterface)
+	/// <param name="handlerSettings">The configuration to be used.</param>
+	public FileHandler(IUserInterface userInterface,
+		IOptions<HandlerSettings> handlerSettings)
 	{
 		_userInterface = userInterface;
+		_settings = handlerSettings.Value;
 	}
 
 	/// <summary>
@@ -33,7 +38,7 @@ internal class FileHandler : IHandler
 	/// <exception cref="FileNotFoundException">Thrown when the input file does not exist.</exception>
 	public async IAsyncEnumerable<string> ReadInputAsync()
 	{
-		while (true)
+		while (IsStopped is false)
 		{
 			var inputFilePath = GetInputFilePath();
 
@@ -53,14 +58,18 @@ internal class FileHandler : IHandler
 	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output)
 	{
 		var outputFilePath = GetOutputFilePath();
-		var formattedOutput = FormatOutput(output);
+		var formattedOutput = output.Select(FormatProcessingResult);
 		await WriteLinesToFileAsync(outputFilePath, formattedOutput);
 	}
 
 	private string GetInputFilePath()
 	{
-		_userInterface.WriteMessage($"Enter the path of the input file or type '{ExitCommand}' to finish:");
+		var enterTemplate = _settings.EnterFileTemplate;
+		var enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
+
+		_userInterface.WriteMessage(enterMessage);
 		var inputFilePath = _userInterface.ReadInput();
+
 		ArgumentNullException.ThrowIfNull(inputFilePath);
 
 		return inputFilePath;
@@ -68,18 +77,19 @@ internal class FileHandler : IHandler
 
 	private bool CheckForExitCommand(string inputFilePath)
 	{
-		if (inputFilePath.Equals(ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
+		if (inputFilePath.Equals(_settings.ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
 			return false;
 
 		IsStopped = true;
+		_userInterface.WriteMessage(_settings.GoodBye);
 
 		return true;
 	}
 
-	private static async IAsyncEnumerable<string> ReadLinesFromFileAsync(string inputFilePath)
+	private async IAsyncEnumerable<string> ReadLinesFromFileAsync(string inputFilePath)
 	{
 		if (File.Exists(inputFilePath) is false)
-			throw new FileNotFoundException("Input file does not exist.");
+			throw new FileNotFoundException(_settings.FileNonexistent);
 
 		using var reader = new StreamReader(inputFilePath);
 
@@ -91,28 +101,28 @@ internal class FileHandler : IHandler
 
 	private string GetOutputFilePath()
 	{
-		_userInterface.WriteMessage("Enter output file path:");
+		_userInterface.WriteMessage(_settings.OutputFileTemplate);
 		var outputFilePath = _userInterface.ReadInput();
 		ArgumentNullException.ThrowIfNull(outputFilePath);
 
 		return outputFilePath;
 	}
 
-	private static IEnumerable<string> FormatOutput(IEnumerable<ProcessingResult> output)
-	{
-		return output.Select(FormatProcessingResult);
-	}
-
 	private async Task WriteLinesToFileAsync(string outputFilePath, IEnumerable<string> lines)
 	{
 		await File.WriteAllLinesAsync(outputFilePath, lines);
-		_userInterface.WriteMessage($"Output written to file {outputFilePath} successfully.");
+
+		var enterTemplate = _settings.WriteFileReport;
+		_userInterface.WriteMessage(string.Format(enterTemplate, outputFilePath));
 	}
 
-	private static string FormatProcessingResult(ProcessingResult result)
+	private string FormatProcessingResult(ProcessingResult result)
 	{
+		var resultTemplate = _settings.ResultFileLineTemplate;
+		var errorTemplate = _settings.ErrorFileReport;
+
 		return string.IsNullOrWhiteSpace(result.ErrorMessage)
-			? $"Original expression: {result.OriginalOperation}\nResult: {result.Result}"
-			: $"Error processing expression: {result.OriginalOperation}\nError message: {result.ErrorMessage}";
+			? string.Format(resultTemplate, result.OriginalOperation, result.Result)
+			: string.Format(errorTemplate, result.OriginalOperation, result.ErrorMessage);
 	}
 }

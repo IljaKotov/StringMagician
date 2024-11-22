@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using StringMagician.Configuration;
 using StringMagician.Interfaces;
 
 namespace StringMagician.Operations;
@@ -8,15 +9,22 @@ namespace StringMagician.Operations;
 /// </summary>
 internal class MultiplicationOperation : IOperation
 {
+	private readonly OperationSettings _settings;
+
 	/// <summary>
 	/// Gets the priority of the operation.
 	/// </summary>
-	public int Priority => 2;
+	public int Priority => _settings.Priority;
 
 	/// <summary>
 	/// Gets the operator symbol.
 	/// </summary>
-	public string Operator => "*";
+	public string Operator => _settings.Operator;
+
+	public MultiplicationOperation(OperationSettings settings)
+	{
+		_settings = settings;
+	}
 
 	/// <summary>
 	/// Executes the multiplication operation - repeats the string a specified number of times.
