@@ -16,67 +16,79 @@ IConfigurationRoot configuration = new ConfigurationBuilder()
 	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 	.Build();
 
-ServiceProvider serviceProvider = new ServiceCollection()
-	.AddSingleton<IConfiguration>(configuration)
-	.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind)
-	.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind)
-	.Configure<List<OperationSettings>>(configuration.GetSection("Settings:Operations").Bind)
-	.AddTransient<IParser, ExpressionParser>()
-	.AddTransient<IEvaluator, RpnEvaluator>()
-	.AddSingleton<OperationContext>()
-	.AddSingleton<IEnumerable<IOperation>>(provider =>
-	{
-		IOptions<List<OperationSettings>>? operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
-		ArgumentNullException.ThrowIfNull(operationSettings);
+ServiceCollection services = new();
+services.AddSingleton<IConfiguration>(configuration);
 
-		return OperationFactory.CreateOperations(operationSettings);
-	})
-	.AddSingleton<IProcessorCore, ProcessorCore>()
-	.AddSingleton<IUserInterface, ConsoleUserInterface>()
-	.AddSingleton<ConsoleHandler>()
-	.AddSingleton<FileHandler>()
-	.AddSingleton<IHandlerFactory, HandlerFactory>()
-	.AddSingleton<ProcessorRunner>()
-	.AddSingleton(provider =>
-	{
-		IEnumerable<IOperation>? operations = provider.GetService<IEnumerable<IOperation>>();
-		ArgumentNullException.ThrowIfNull(operations);
+services.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind);
+services.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind);
+services.Configure<List<OperationSettings>>(configuration.GetSection("Settings:Operations").Bind);
 
-		return operations.ToDictionary(op => op.Operator, op => op.Priority);
-	})
-	.AddTransient<OperandHandler>()
-	.AddTransient<OperatorHandler>(provider =>
-	{
-		Dictionary<string, int>? operationsPriorities = provider.GetService<Dictionary<string, int>>();
-		IOptions<CoreSettings>? coreSettings = provider.GetService<IOptions<CoreSettings>>();
-		ArgumentNullException.ThrowIfNull(operationsPriorities);
-		ArgumentNullException.ThrowIfNull(coreSettings);
+services.AddTransient<IParser, ExpressionParser>();
+services.AddTransient<IEvaluator, RpnEvaluator>();
 
-		return new OperatorHandler(operationsPriorities, coreSettings);
-	})
-	.AddTransient<LeftParenthesisHandler>()
-	.AddTransient<RightParenthesisHandler>()
-	.AddSingleton<IChainHandler>(provider =>
-	{
-		OperandHandler? operandHandler = provider.GetService<OperandHandler>();
-		OperatorHandler? operatorHandler = provider.GetService<OperatorHandler>();
-		LeftParenthesisHandler? leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
-		RightParenthesisHandler? rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
+services.AddSingleton<OperationContext>();
+services.AddSingleton<IEnumerable<IOperation>>(provider =>
+{
+	IOptions<List<OperationSettings>>? operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
+	ArgumentNullException.ThrowIfNull(operationSettings);
 
-		ArgumentNullException.ThrowIfNull(operandHandler);
-		ArgumentNullException.ThrowIfNull(operatorHandler);
-		ArgumentNullException.ThrowIfNull(leftParenthesisHandler);
-		ArgumentNullException.ThrowIfNull(rightParenthesisHandler);
+	return OperationFactory.CreateOperations(operationSettings);
+});
 
-		operandHandler.SetNext(operatorHandler)
-			.SetNext(leftParenthesisHandler)
-			.SetNext(rightParenthesisHandler);
+services.AddSingleton<IProcessorCore, ProcessorCore>();
 
-		return operandHandler;
-	})
-	.AddTransient<IConverter, RpnConverter>()
-	.BuildServiceProvider();
+services.AddSingleton<IUserInterface, ConsoleUserInterface>();
+services.AddSingleton<ConsoleHandler>();
+services.AddSingleton<FileHandler>();
+services.AddSingleton<IHandlerFactory, HandlerFactory>();
+
+services.AddSingleton<ProcessorRunner>();
+
+services.AddSingleton(provider =>
+{
+	IEnumerable<IOperation>? operations = provider.GetService<IEnumerable<IOperation>>();
+	ArgumentNullException.ThrowIfNull(operations);
+
+	return operations.ToDictionary(op => op.Operator, op => op.Priority);
+});
+
+services.AddTransient<OperandHandler>();
+services.AddTransient<OperatorHandler>(provider =>
+{
+	Dictionary<string, int>? operationsPriorities = provider.GetService<Dictionary<string, int>>();
+	IOptions<CoreSettings>? coreSettings = provider.GetService<IOptions<CoreSettings>>();
+	ArgumentNullException.ThrowIfNull(operationsPriorities);
+	ArgumentNullException.ThrowIfNull(coreSettings);
+
+	return new OperatorHandler(operationsPriorities, coreSettings);
+});
+services.AddTransient<LeftParenthesisHandler>();
+services.AddTransient<RightParenthesisHandler>();
+
+services.AddSingleton<IChainHandler>(provider =>
+{
+	OperandHandler? operandHandler = provider.GetService<OperandHandler>();
+	OperatorHandler? operatorHandler = provider.GetService<OperatorHandler>();
+	LeftParenthesisHandler? leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
+	RightParenthesisHandler? rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
+
+	ArgumentNullException.ThrowIfNull(operandHandler);
+	ArgumentNullException.ThrowIfNull(operatorHandler);
+	ArgumentNullException.ThrowIfNull(leftParenthesisHandler);
+	ArgumentNullException.ThrowIfNull(rightParenthesisHandler);
+
+	operandHandler.SetNext(operatorHandler)
+		.SetNext(leftParenthesisHandler)
+		.SetNext(rightParenthesisHandler);
+
+	return operandHandler;
+});
+
+services.AddTransient<IConverter, RpnConverter>();
+
+ServiceProvider serviceProvider = services.BuildServiceProvider();
 
 ProcessorRunner? runner = serviceProvider.GetService<ProcessorRunner>();
 ArgumentNullException.ThrowIfNull(runner);
 await runner.RunAsync();
+

@@ -31,13 +31,11 @@ internal class RpnConverter : IConverter
 		await foreach (string token in tokens)
 		{
 			_chain.Handle(token, output, operators);
-			await Task.Yield();
 		}
 
 		while (operators.Count > 0)
 		{
 			output.Add(operators.Pop());
-			await Task.Yield();
 		}
 
 		foreach (string item in output)
