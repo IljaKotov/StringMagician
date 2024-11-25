@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using StringMagician.Configuration;
 using StringMagician.Interfaces;
-using StringMagician.Operations;
 
 namespace StringMagician.Core;
 
@@ -11,7 +10,7 @@ namespace StringMagician.Core;
 internal class RpnEvaluator : IEvaluator
 {
 	private readonly IDictionary<string, IOperation> _operations;
-	private readonly OperationContext _context;
+	private readonly IOperationContext _context;
 	private readonly CoreSettings _settings;
 
 	/// <summary>
@@ -21,7 +20,7 @@ internal class RpnEvaluator : IEvaluator
 	/// <param name="context">The operation context to be used for evaluation.</param>
 	/// <param name="coreSettings">The configuration to be used.</param>
 	public RpnEvaluator(IEnumerable<IOperation> operations,
-		OperationContext context,
+		IOperationContext context,
 		IOptions<CoreSettings> coreSettings)
 	{
 		_operations = operations.ToDictionary(op => op.Operator, op => op);

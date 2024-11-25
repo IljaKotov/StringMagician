@@ -6,7 +6,7 @@ namespace StringMagician;
 /// <summary>
 /// Runs the total process of evaluating.
 /// </summary>
-internal class ProcessorRunner
+internal class ProcessorRunner: IProcessorRunner
 {
 	private readonly IProcessorCore _processorCore;
 	private readonly IHandlerFactory _handlerFactory;

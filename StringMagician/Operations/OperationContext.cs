@@ -2,7 +2,7 @@
 
 namespace StringMagician.Operations;
 
-internal class OperationContext
+internal class OperationContext: IOperationContext
 {
 	private IOperation? _operation;
 
