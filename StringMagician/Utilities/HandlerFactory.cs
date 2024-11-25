@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using StringMagician.Configuration;
 using StringMagician.Handlers;
 using StringMagician.Interfaces;
@@ -8,13 +9,13 @@ namespace StringMagician.Utilities;
 internal class HandlerFactory : IHandlerFactory
 {
 	private readonly IUserInterface _userInterface;
-	private readonly ConsoleHandler _consoleHandler;
-	private readonly FileHandler _fileHandler;
+	private readonly IHandler _consoleHandler;
+	private readonly IHandler _fileHandler;
 	private readonly HandlerSettings _settings;
 
 	public HandlerFactory(IUserInterface userInterface,
-		ConsoleHandler consoleHandler,
-		FileHandler fileHandler,
+		[FromKeyedServices(HandlerType.Console)] IHandler consoleHandler,
+		[FromKeyedServices(HandlerType.File)] IHandler fileHandler,
 		IOptions<HandlerSettings> settings)
 	{
 		_userInterface = userInterface;

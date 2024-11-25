@@ -38,8 +38,8 @@ services.AddSingleton<IEnumerable<IOperation>>(provider =>
 services.AddSingleton<IProcessorCore, ProcessorCore>();
 
 services.AddSingleton<IUserInterface, ConsoleUserInterface>();
-services.AddSingleton<ConsoleHandler>();
-services.AddSingleton<FileHandler>();
+services.AddKeyedSingleton<IHandler,ConsoleHandler>(HandlerType.Console);
+services.AddKeyedSingleton<IHandler,FileHandler>(HandlerType.File);
 services.AddSingleton<IHandlerFactory, HandlerFactory>();
 
 services.AddSingleton<ProcessorRunner>();
