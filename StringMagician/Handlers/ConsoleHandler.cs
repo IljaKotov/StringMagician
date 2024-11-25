@@ -39,7 +39,7 @@ internal class ConsoleHandler : IHandler
 	{
 		while (IsStopped is false)
 		{
-			var input = await GetInputAsync();
+			string input = await GetInputAsync();
 
 			if (CheckForExitCommand(input))
 				yield break;
@@ -55,7 +55,7 @@ internal class ConsoleHandler : IHandler
 	/// <param name="output">The collection of output lines to be written.</param>
 	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output)
 	{
-		foreach (var result in output)
+		foreach (ProcessingResult result in output)
 		{
 			await WriteMessageAsync(FormatProcessingResult(result));
 		}
@@ -63,12 +63,12 @@ internal class ConsoleHandler : IHandler
 
 	private async Task<string> GetInputAsync()
 	{
-		var enterTemplate = _settings.EnterConsoleTemplate;
-		var enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
+		string enterTemplate = _settings.EnterConsoleTemplate;
+		string enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
 
 		_userInterface.WriteMessage(enterMessage);
 
-		var input = await Task.Run(() => _userInterface.ReadInput());
+		string input = await Task.Run(() => _userInterface.ReadInput());
 		ArgumentNullException.ThrowIfNull(input);
 
 		return input;
@@ -92,8 +92,8 @@ internal class ConsoleHandler : IHandler
 
 	private string FormatProcessingResult(ProcessingResult result)
 	{
-		var resultTemplate = _settings.ResultConsoleMessage;
-		var errorMessage = _settings.ErrorConsoleMessage;
+		string resultTemplate = _settings.ResultConsoleMessage;
+		string errorMessage = _settings.ErrorConsoleMessage;
 
 		return string.IsNullOrWhiteSpace(result.ErrorMessage)
 			? string.Format(resultTemplate, result.OriginalOperation, result.Result)

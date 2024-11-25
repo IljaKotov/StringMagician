@@ -16,7 +16,7 @@ internal class ExpressionParser : IParser
 	/// <returns>A list of tokens extracted from the expression.</returns>
 	public async IAsyncEnumerable<string> ParseAsync(string expression)
 	{
-		var regex = RegexPatterns.FullPattern;
+		Regex regex = RegexPatterns.FullPattern;
 
 		foreach (Match match in regex.Matches(expression))
 		{

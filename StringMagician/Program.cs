@@ -11,12 +11,12 @@ using StringMagician.Operations;
 using StringMagician.UserInterfaces;
 using StringMagician.Utilities;
 
-var configuration = new ConfigurationBuilder()
+IConfigurationRoot configuration = new ConfigurationBuilder()
 	.SetBasePath(Directory.GetCurrentDirectory())
 	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 	.Build();
 
-var serviceProvider = new ServiceCollection()
+ServiceProvider serviceProvider = new ServiceCollection()
 	.AddSingleton<IConfiguration>(configuration)
 	.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind)
 	.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind)
@@ -26,7 +26,7 @@ var serviceProvider = new ServiceCollection()
 	.AddSingleton<OperationContext>()
 	.AddSingleton<IEnumerable<IOperation>>(provider =>
 	{
-		var operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
+		IOptions<List<OperationSettings>>? operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
 		ArgumentNullException.ThrowIfNull(operationSettings);
 
 		return OperationFactory.CreateOperations(operationSettings);
@@ -39,7 +39,7 @@ var serviceProvider = new ServiceCollection()
 	.AddSingleton<ProcessorRunner>()
 	.AddSingleton(provider =>
 	{
-		var operations = provider.GetService<IEnumerable<IOperation>>();
+		IEnumerable<IOperation>? operations = provider.GetService<IEnumerable<IOperation>>();
 		ArgumentNullException.ThrowIfNull(operations);
 
 		return operations.ToDictionary(op => op.Operator, op => op.Priority);
@@ -47,8 +47,8 @@ var serviceProvider = new ServiceCollection()
 	.AddTransient<OperandHandler>()
 	.AddTransient<OperatorHandler>(provider =>
 	{
-		var operationsPriorities = provider.GetService<Dictionary<string, int>>();
-		var coreSettings = provider.GetService<IOptions<CoreSettings>>();
+		Dictionary<string, int>? operationsPriorities = provider.GetService<Dictionary<string, int>>();
+		IOptions<CoreSettings>? coreSettings = provider.GetService<IOptions<CoreSettings>>();
 		ArgumentNullException.ThrowIfNull(operationsPriorities);
 		ArgumentNullException.ThrowIfNull(coreSettings);
 
@@ -58,10 +58,10 @@ var serviceProvider = new ServiceCollection()
 	.AddTransient<RightParenthesisHandler>()
 	.AddSingleton<IChainHandler>(provider =>
 	{
-		var operandHandler = provider.GetService<OperandHandler>();
-		var operatorHandler = provider.GetService<OperatorHandler>();
-		var leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
-		var rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
+		OperandHandler? operandHandler = provider.GetService<OperandHandler>();
+		OperatorHandler? operatorHandler = provider.GetService<OperatorHandler>();
+		LeftParenthesisHandler? leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
+		RightParenthesisHandler? rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
 
 		ArgumentNullException.ThrowIfNull(operandHandler);
 		ArgumentNullException.ThrowIfNull(operatorHandler);
@@ -77,6 +77,6 @@ var serviceProvider = new ServiceCollection()
 	.AddTransient<IConverter, RpnConverter>()
 	.BuildServiceProvider();
 
-var runner = serviceProvider.GetService<ProcessorRunner>();
+ProcessorRunner? runner = serviceProvider.GetService<ProcessorRunner>();
 ArgumentNullException.ThrowIfNull(runner);
 await runner.RunAsync();

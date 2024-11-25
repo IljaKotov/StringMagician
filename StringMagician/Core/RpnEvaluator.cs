@@ -37,9 +37,9 @@ internal class RpnEvaluator : IEvaluator
 	/// <exception cref="InvalidOperationException">Thrown when the expression is malformed or there are insufficient operands.</exception>
 	public async Task<string> EvaluateAsync(IAsyncEnumerable<string> rpnTokens)
 	{
-		var stack = new Stack<string>();
+		Stack<string> stack = new();
 
-		await foreach (var token in rpnTokens)
+		await foreach (string token in rpnTokens)
 		{
 			await ProcessTokenAsync(token, stack);
 		}
@@ -51,7 +51,7 @@ internal class RpnEvaluator : IEvaluator
 
 	private async Task ProcessTokenAsync(string token, Stack<string> stack)
 	{
-		if (_operations.TryGetValue(token, out var operation))
+		if (_operations.TryGetValue(token, out IOperation? operation))
 		{
 			await ExecuteOperationAsync(stack, operation);
 		}
@@ -66,10 +66,10 @@ internal class RpnEvaluator : IEvaluator
 		if (stack.Count < _settings.MinimumOperands)
 			throw new InvalidOperationException(_settings.InsufficientOperands);
 
-		var operandRight = stack.Pop();
-		var operandLeft = stack.Pop();
+		string operandRight = stack.Pop();
+		string operandLeft = stack.Pop();
 		_context.SetOperation(operation);
-		var result = await Task.Run(() => _context.ExecuteOperation(operandLeft, operandRight));
+		string result = await Task.Run(() => _context.ExecuteOperation(operandLeft, operandRight));
 		stack.Push(result);
 	}
 

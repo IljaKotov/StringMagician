@@ -25,10 +25,10 @@ internal class RpnConverter : IConverter
 	/// <returns>A list of tokens in Reverse Polish Notation.</returns>
 	public async IAsyncEnumerable<string> ConvertToRpnAsync(IAsyncEnumerable<string> tokens)
 	{
-		var output = new List<string>();
-		var operators = new Stack<string>();
+		List<string> output = [];
+		Stack<string> operators = new();
 
-		await foreach (var token in tokens)
+		await foreach (string token in tokens)
 		{
 			_chain.Handle(token, output, operators);
 			await Task.Yield();
@@ -40,7 +40,7 @@ internal class RpnConverter : IConverter
 			await Task.Yield();
 		}
 
-		foreach (var item in output)
+		foreach (string item in output)
 		{
 			yield return item;
 		}

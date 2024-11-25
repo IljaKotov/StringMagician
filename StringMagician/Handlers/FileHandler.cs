@@ -40,12 +40,12 @@ internal class FileHandler : IHandler
 	{
 		while (IsStopped is false)
 		{
-			var inputFilePath = GetInputFilePath();
+			string inputFilePath = GetInputFilePath();
 
 			if (CheckForExitCommand(inputFilePath))
 				yield break;
 
-			await foreach (var line in ReadLinesFromFileAsync(inputFilePath))
+			await foreach (string line in ReadLinesFromFileAsync(inputFilePath))
 				yield return line;
 		}
 	}
@@ -57,18 +57,18 @@ internal class FileHandler : IHandler
 	/// <exception cref="ArgumentNullException">Thrown when the output file path is null.</exception>
 	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output)
 	{
-		var outputFilePath = GetOutputFilePath();
-		var formattedOutput = output.Select(FormatProcessingResult);
+		string outputFilePath = GetOutputFilePath();
+		IEnumerable<string> formattedOutput = output.Select(FormatProcessingResult);
 		await WriteLinesToFileAsync(outputFilePath, formattedOutput);
 	}
 
 	private string GetInputFilePath()
 	{
-		var enterTemplate = _settings.EnterFileTemplate;
-		var enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
+		string enterTemplate = _settings.EnterFileTemplate;
+		string enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
 
 		_userInterface.WriteMessage(enterMessage);
-		var inputFilePath = _userInterface.ReadInput();
+		string inputFilePath = _userInterface.ReadInput();
 
 		ArgumentNullException.ThrowIfNull(inputFilePath);
 
@@ -91,7 +91,7 @@ internal class FileHandler : IHandler
 		if (File.Exists(inputFilePath) is false)
 			throw new FileNotFoundException(_settings.FileNonexistent);
 
-		using var reader = new StreamReader(inputFilePath);
+		using StreamReader reader = new(inputFilePath);
 
 		while (await reader.ReadLineAsync() is { } line)
 		{
@@ -102,7 +102,7 @@ internal class FileHandler : IHandler
 	private string GetOutputFilePath()
 	{
 		_userInterface.WriteMessage(_settings.OutputFileTemplate);
-		var outputFilePath = _userInterface.ReadInput();
+		string outputFilePath = _userInterface.ReadInput();
 		ArgumentNullException.ThrowIfNull(outputFilePath);
 
 		return outputFilePath;
@@ -112,14 +112,14 @@ internal class FileHandler : IHandler
 	{
 		await File.WriteAllLinesAsync(outputFilePath, lines);
 
-		var enterTemplate = _settings.WriteFileReport;
+		string enterTemplate = _settings.WriteFileReport;
 		_userInterface.WriteMessage(string.Format(enterTemplate, outputFilePath));
 	}
 
 	private string FormatProcessingResult(ProcessingResult result)
 	{
-		var resultTemplate = _settings.ResultFileLineTemplate;
-		var errorTemplate = _settings.ErrorFileReport;
+		string resultTemplate = _settings.ResultFileLineTemplate;
+		string errorTemplate = _settings.ErrorFileReport;
 
 		return string.IsNullOrWhiteSpace(result.ErrorMessage)
 			? string.Format(resultTemplate, result.OriginalOperation, result.Result)

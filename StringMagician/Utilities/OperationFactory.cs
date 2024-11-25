@@ -16,7 +16,7 @@ internal static class OperationFactory
 	/// <returns>A list of <see cref="IOperation"/> instances.</returns>
 	public static List<IOperation> CreateOperations(IOptions<List<OperationSettings>> operationSettings)
 	{
-		var settings = operationSettings.Value.ToDictionary(s => s.Id);
+		Dictionary<string, OperationSettings> settings = operationSettings.Value.ToDictionary(s => s.Id);
 
 		return
 		[

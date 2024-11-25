@@ -35,15 +35,15 @@ internal class MultiplicationOperation : IOperation
 	/// <exception cref="ArgumentException">Thrown when the multiplier is not a non-negative integer.</exception>
 	public string Execute(string operandLeft, string operandRight)
 	{
-		var isValidNumber = int.TryParse(operandRight, out var repeatCount);
-		var isNonNegative = repeatCount >= 0;
+		bool isValidNumber = int.TryParse(operandRight, out int repeatCount);
+		bool isNonNegative = repeatCount >= 0;
 
 		if (isValidNumber is false || isNonNegative is false)
 			throw new ArgumentException("Multiplier should be a non-negative integer.");
 
-		var result = new StringBuilder();
+		StringBuilder result = new();
 
-		for (var i = 0; i < repeatCount; i++)
+		for (int i = 0; i < repeatCount; i++)
 			result.Append(operandLeft);
 
 		return result.ToString();

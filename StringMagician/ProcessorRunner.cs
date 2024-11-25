@@ -1,4 +1,5 @@
-﻿using StringMagician.Interfaces;
+﻿using StringMagician.Core;
+using StringMagician.Interfaces;
 
 namespace StringMagician;
 
@@ -26,15 +27,15 @@ internal class ProcessorRunner
 	/// </summary>
 	public async Task RunAsync()
 	{
-		var handler = _handlerFactory.SelectHandler();
+		IHandler handler = _handlerFactory.SelectHandler();
 		ArgumentNullException.ThrowIfNull(handler);
 
-		await foreach (var line in handler.ReadInputAsync())
+		await foreach (string line in handler.ReadInputAsync())
 		{
 			if (handler.IsStopped)
 				break;
 
-			var result = await _processorCore.ProcessLine(line);
+			ProcessingResult result = await _processorCore.ProcessLine(line);
 
 			await handler.WriteOutputAsync([result]);
 		}

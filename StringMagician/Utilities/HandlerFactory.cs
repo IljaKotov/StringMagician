@@ -25,17 +25,17 @@ internal class HandlerFactory : IHandlerFactory
 
 	public IHandler SelectHandler()
 	{
-		var enterTemplate = _settings.SelectModeMessage;
+		string enterTemplate = _settings.SelectModeMessage;
 
 		_userInterface.WriteMessage(string.Format(enterTemplate, _settings.InteractiveModeCommand,
 			_settings.FileProcessingModeCommand));
 
-		var mode = _userInterface.ReadInput();
+		string mode = _userInterface.ReadInput();
 
 		return mode switch
 		{
-			var m when m == _settings.InteractiveModeCommand => _consoleHandler,
-			var m when m == _settings.FileProcessingModeCommand => _fileHandler,
+			_ when mode == _settings.InteractiveModeCommand => _consoleHandler,
+			_ when mode == _settings.FileProcessingModeCommand => _fileHandler,
 			_ => SelectHandler()
 		};
 	}
