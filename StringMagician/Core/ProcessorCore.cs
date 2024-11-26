@@ -35,11 +35,11 @@ internal class ProcessorCore : IProcessorCore
 	{
 		try
 		{
-			IEnumerable<string> tokens = _parser.ParseAsync(line);
+			IEnumerable<string> tokens = _parser.Parse(line);
 
-			IEnumerable<string> rpnTokens = _converter.ConvertToRpnAsync(tokens);
+			IEnumerable<string> rpnTokens = _converter.ConvertToRpn(tokens);
 
-			string result = _evaluator.EvaluateAsync(rpnTokens);
+			string result = _evaluator.Evaluate(rpnTokens);
 
 			return new ProcessingResult(line, result, string.Empty);
 		}

@@ -34,13 +34,13 @@ internal class RpnEvaluator : IEvaluator
 	/// <param name="rpnTokens">The list of tokens in Reverse Polish Notation.</param>
 	/// <returns>The result of the evaluation.</returns>
 	/// <exception cref="InvalidOperationException">Thrown when the expression is malformed or there are insufficient operands.</exception>
-	public string EvaluateAsync(IEnumerable<string> rpnTokens)
+	public string Evaluate(IEnumerable<string> rpnTokens)
 	{
 		Stack<string> stack = new();
 
 		foreach (string token in rpnTokens)
 		{
-			ProcessTokenAsync(token, stack);
+			ProcessToken(token, stack);
 		}
 
 		ValidateFinalStack(stack);
@@ -48,11 +48,11 @@ internal class RpnEvaluator : IEvaluator
 		return stack.Pop();
 	}
 
-	private void ProcessTokenAsync(string token, Stack<string> stack)
+	private void ProcessToken(string token, Stack<string> stack)
 	{
 		if (_operations.TryGetValue(token, out IOperation? operation))
 		{
-			ExecuteOperationAsync(stack, operation);
+			ExecuteOperation(stack, operation);
 		}
 		else
 		{
@@ -60,7 +60,7 @@ internal class RpnEvaluator : IEvaluator
 		}
 	}
 
-	private void ExecuteOperationAsync(Stack<string> stack, IOperation operation)
+	private void ExecuteOperation(Stack<string> stack, IOperation operation)
 	{
 		if (stack.Count < _settings.MinimumOperands)
 			throw new InvalidOperationException(_settings.InsufficientOperands);

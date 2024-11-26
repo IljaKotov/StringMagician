@@ -18,9 +18,9 @@ public class RpnConverterTests : TestBase
 	[MemberData(nameof(TestCaseGenerator.GetTestData), MemberType = typeof(TestCaseGenerator))]
 	public void TestRpnConversion(TestCase testCase)
 	{
-		List<string> tokens = Parser.ParseAsync(testCase.Expression).ToList();
+		List<string> tokens = Parser.Parse(testCase.Expression).ToList();
 
-		List<string>? rpnTokens = _converter?.ConvertToRpnAsync(tokens).ToList();
+		List<string>? rpnTokens = _converter?.ConvertToRpn(tokens).ToList();
 		ArgumentNullException.ThrowIfNull(_converter);
 		
 

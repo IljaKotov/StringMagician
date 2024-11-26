@@ -33,10 +33,10 @@ public class RpnEvaluatorTests : TestBase
 
 	private string EvaluateAsync(string expression)
 	{
-		List<string> tokens = Parser.ParseAsync(expression).ToList();
-		List<string>? rpnTokens = _converter?.ConvertToRpnAsync(tokens).ToList();
+		List<string> tokens = Parser.Parse(expression).ToList();
+		List<string>? rpnTokens = _converter?.ConvertToRpn(tokens).ToList();
 		ArgumentNullException.ThrowIfNull(rpnTokens);
 
-		return _evaluator.EvaluateAsync(rpnTokens);
+		return _evaluator.Evaluate(rpnTokens);
 	}
 }
