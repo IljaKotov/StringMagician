@@ -2,5 +2,5 @@
 
 internal interface IParser
 {
-	IAsyncEnumerable<string> ParseAsync(string expression);
+	IEnumerable<string> ParseAsync(string expression);
 }

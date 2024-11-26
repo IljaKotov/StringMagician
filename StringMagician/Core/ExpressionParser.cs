@@ -14,14 +14,10 @@ internal class ExpressionParser : IParser
 	/// </summary>
 	/// <param name="expression">The input expression to be parsed.</param>
 	/// <returns>A list of tokens extracted from the expression.</returns>
-	public async IAsyncEnumerable<string> ParseAsync(string expression)
+	public IEnumerable<string> ParseAsync(string expression)
 	{
-		Regex regex = RegexPatterns.FullPattern;
-
-		foreach (Match match in regex.Matches(expression))
+		foreach (Match match in RegexPatterns.FullPattern.Matches(expression))
 		{
-			await Task.Yield();
-
 			yield return match.Value;
 		}
 	}

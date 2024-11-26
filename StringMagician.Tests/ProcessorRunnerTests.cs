@@ -9,28 +9,28 @@ public class ProcessorRunnerTests
 	[Fact]
 	public async Task RunAsync_ShouldProcessLinesCorrectly()
 	{
-		var mockProcessorCore = Substitute.For<IProcessorCore>();
-		var mockHandler = Substitute.For<IHandler>();
-		var mockHandlerFactory = Substitute.For<IHandlerFactory>();
+		IProcessorCore? mockProcessorCore = Substitute.For<IProcessorCore>();
+		IHandler? mockHandler = Substitute.For<IHandler>();
+		IHandlerFactory? mockHandlerFactory = Substitute.For<IHandlerFactory>();
 
 		mockHandler.ReadInputAsync().Returns(GetTestLines());
 		mockHandler.WriteOutputAsync(Arg.Any<IEnumerable<ProcessingResult>>()).Returns(Task.CompletedTask);
 
 		mockProcessorCore.ProcessLine(Arg.Any<string>())
-			.Returns(Task.FromResult(new ProcessingResult("Line", "Processed", string.Empty)));
+			.Returns(new ProcessingResult("Line", "Processed", string.Empty));
 
 		mockHandlerFactory.SelectHandler().Returns(mockHandler);
 
-		var runner = new ProcessorRunner(mockProcessorCore, mockHandlerFactory);
+		ProcessorRunner runner = new ProcessorRunner(mockProcessorCore, mockHandlerFactory);
 
 		await runner.RunAsync();
 
-		await foreach (var line in GetTestLines())
+		await foreach (string line in GetTestLines())
 		{
-			await mockProcessorCore.Received().ProcessLine(line);
+			mockProcessorCore.Received().ProcessLine(line);
 		}
 
-		await mockProcessorCore.Received(3).ProcessLine(Arg.Any<string>());
+		mockProcessorCore.Received(3).ProcessLine(Arg.Any<string>());
 
 		await mockHandler.Received(3)
 			.WriteOutputAsync(

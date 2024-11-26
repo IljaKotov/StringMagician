@@ -57,21 +57,22 @@ internal class ConsoleHandler : IHandler
 	{
 		foreach (ProcessingResult result in output)
 		{
-			await WriteMessageAsync(FormatProcessingResult(result));
+			string message = FormatProcessingResult(result);
+			await WriteMessageAsync(message);
 		}
 	}
 
-	private async Task<string> GetInputAsync()
+	private Task<string> GetInputAsync()
 	{
 		string enterTemplate = _settings.EnterConsoleTemplate;
 		string enterMessage = string.Format(enterTemplate, _settings.ExitCommand);
 
 		_userInterface.WriteMessage(enterMessage);
 
-		string input = await Task.Run(() => _userInterface.ReadInput());
+		string input = _userInterface.ReadInput();
 		ArgumentNullException.ThrowIfNull(input);
 
-		return input;
+		return Task.FromResult(input);
 	}
 
 	private bool CheckForExitCommand(string input)
@@ -85,9 +86,10 @@ internal class ConsoleHandler : IHandler
 		return true;
 	}
 
-	private async Task WriteMessageAsync(string message)
+	private Task WriteMessageAsync(string message)
 	{
-		await Task.Run(() => _userInterface.WriteMessage(message));
+		_userInterface.WriteMessage(message);
+		return Task.CompletedTask;
 	}
 
 	private string FormatProcessingResult(ProcessingResult result)

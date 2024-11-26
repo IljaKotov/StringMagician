@@ -16,17 +16,13 @@ public class RpnConverterTests : TestBase
 
 	[Theory]
 	[MemberData(nameof(TestCaseGenerator.GetTestData), MemberType = typeof(TestCaseGenerator))]
-	public async Task TestRpnConversion(TestCase testCase)
+	public void TestRpnConversion(TestCase testCase)
 	{
-		var tokens = await Parser.ParseAsync(testCase.Expression).ToListAsync();
+		List<string> tokens = Parser.ParseAsync(testCase.Expression).ToList();
 
-		var rpnTokens = new List<string>();
+		List<string>? rpnTokens = _converter?.ConvertToRpnAsync(tokens).ToList();
 		ArgumentNullException.ThrowIfNull(_converter);
-
-		await foreach (var rpnToken in _converter.ConvertToRpnAsync(tokens.ToAsyncEnumerable()).ConfigureAwait(false))
-		{
-			rpnTokens.Add(rpnToken);
-		}
+		
 
 		rpnTokens.Should().BeEquivalentTo(testCase.ExpectedRpnTokens, options => options.WithStrictOrdering());
 	}

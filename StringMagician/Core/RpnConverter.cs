@@ -23,12 +23,12 @@ internal class RpnConverter : IConverter
 	/// </summary>
 	/// <param name="tokens">List of operands, parenthesis and operators in infix notation.</param>
 	/// <returns>A list of tokens in Reverse Polish Notation.</returns>
-	public async IAsyncEnumerable<string> ConvertToRpnAsync(IAsyncEnumerable<string> tokens)
+	public IEnumerable<string> ConvertToRpnAsync(IEnumerable<string> tokens)
 	{
 		List<string> output = [];
 		Stack<string> operators = new();
 
-		await foreach (string token in tokens)
+		foreach (string token in tokens)
 		{
 			_chain.Handle(token, output, operators);
 		}
@@ -37,10 +37,7 @@ internal class RpnConverter : IConverter
 		{
 			output.Add(operators.Pop());
 		}
-
-		foreach (string item in output)
-		{
-			yield return item;
-		}
+		
+		return output;
 	}
 }

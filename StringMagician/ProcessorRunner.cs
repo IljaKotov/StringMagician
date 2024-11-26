@@ -35,7 +35,7 @@ internal class ProcessorRunner: IProcessorRunner
 			if (handler.IsStopped)
 				break;
 
-			ProcessingResult result = await _processorCore.ProcessLine(line);
+			ProcessingResult result = _processorCore.ProcessLine(line);
 
 			await handler.WriteOutputAsync([result]);
 		}

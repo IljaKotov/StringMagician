@@ -16,7 +16,7 @@ public class RpnEvaluatorTests : TestBase
 	public RpnEvaluatorTests()
 	{
 		_converter = ServiceProvider.GetService<IConverter>() as RpnConverter;
-		var context = ServiceProvider.GetService<OperationContext>();
+		IOperationContext? context = ServiceProvider.GetService<IOperationContext>();
 		ArgumentNullException.ThrowIfNull(context);
 
 		_evaluator = new RpnEvaluator(Operations, context,
@@ -25,23 +25,18 @@ public class RpnEvaluatorTests : TestBase
 
 	[Theory]
 	[MemberData(nameof(TestCaseGenerator.GetTestData), MemberType = typeof(TestCaseGenerator))]
-	public async Task TestOperations(TestCase testCase)
+	public void TestOperations(TestCase testCase)
 	{
-		var result = await EvaluateAsync(testCase.Expression);
+		string result = EvaluateAsync(testCase.Expression);
 		result.Should().Be(testCase.ExpectedResult);
 	}
 
-	private async Task<string> EvaluateAsync(string expression)
+	private string EvaluateAsync(string expression)
 	{
-		var tokens = await Parser.ParseAsync(expression).ToListAsync();
-		var rpnTokens = new List<string>();
-		ArgumentNullException.ThrowIfNull(_converter);
+		List<string> tokens = Parser.ParseAsync(expression).ToList();
+		List<string>? rpnTokens = _converter?.ConvertToRpnAsync(tokens).ToList();
+		ArgumentNullException.ThrowIfNull(rpnTokens);
 
-		await foreach (var rpnToken in _converter.ConvertToRpnAsync(tokens.ToAsyncEnumerable()).ConfigureAwait(false))
-		{
-			rpnTokens.Add(rpnToken);
-		}
-
-		return await _evaluator.EvaluateAsync(rpnTokens.ToAsyncEnumerable());
+		return _evaluator.EvaluateAsync(rpnTokens);
 	}
 }

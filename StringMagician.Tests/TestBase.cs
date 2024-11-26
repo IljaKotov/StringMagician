@@ -1,97 +1,82 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using StringMagician.Configuration;
 using StringMagician.Core;
 using StringMagician.Core.Handlers;
+using StringMagician.Handlers;
 using StringMagician.Interfaces;
 using StringMagician.Operations;
+using StringMagician.UserInterfaces;
 using StringMagician.Utilities;
 
 namespace StringMagician.Tests;
 
 public class TestBase
 {
-	internal readonly List<IOperation> Operations;
-	internal readonly ExpressionParser Parser = new();
-	protected readonly ServiceProvider ServiceProvider;
+    internal readonly List<IOperation> Operations;
+    internal readonly ExpressionParser Parser = new();
+    protected readonly ServiceProvider ServiceProvider;
 
-	protected TestBase()
-	{
-		var operationSettings = Options.Create(new List<OperationSettings>
-		{
-			new OperationSettings
-			{
-				Id = "Concatenation",
-				Operator = "+",
-				Priority = 1
-			},
-			new OperationSettings
-			{
-				Id = "Multiplication",
-				Operator = "*",
-				Priority = 2
-			},
-			new OperationSettings
-			{
-				Id = "Removal",
-				Operator = "-",
-				Priority = 1
-			}
-		});
+    protected TestBase()
+    {
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
 
-		Operations = OperationFactory.CreateOperations(operationSettings);
+        ServiceCollection services = new();
+        services.AddSingleton<IConfiguration>(configuration);
 
-		var coreSettings = Options.Create(new CoreSettings
-		{
-			InsufficientOperands = "Insufficient operands!",
-			MalformedExpression = "Malformed expression!",
-			FinalStackCount = 1,
-			MinimumOperands = 2,
-			LeftParenthesis = "(",
-			RightParenthesis = ")",
-			EmptyStack = 0
-		});
+        services.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind);
+        services.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind);
+        services.Configure<List<OperationSettings>>(configuration.GetSection("Settings:Operations").Bind);
 
-		ServiceProvider = new ServiceCollection()
-			.AddSingleton<IEnumerable<IOperation>>(Operations)
-			.AddSingleton(coreSettings)
-			.AddSingleton<OperationContext>()
-			.AddSingleton(provider =>
-			{
-				var operations = provider.GetService<IEnumerable<IOperation>>();
-				ArgumentNullException.ThrowIfNull(operations);
+        services.AddTransient<IParser, ExpressionParser>();
+        services.AddTransient<IEvaluator, RpnEvaluator>();
 
-				return operations.ToDictionary(op => op.Operator, op => op.Priority);
-			})
-			.AddTransient<OperandHandler>()
-			.AddTransient<OperatorHandler>(provider =>
-			{
-				var operationPriorities = provider.GetService<Dictionary<string, int>>();
-				ArgumentNullException.ThrowIfNull(operationPriorities);
+        services.AddSingleton<IOperationContext, OperationContext>();
+        services.AddSingleton<IEnumerable<IOperation>>(provider =>
+        {
+            IOptions<List<OperationSettings>>? operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
+            ArgumentNullException.ThrowIfNull(operationSettings);
 
-				return new OperatorHandler(operationPriorities, coreSettings);
-			})
-			.AddTransient<LeftParenthesisHandler>()
-			.AddTransient<RightParenthesisHandler>()
-			.AddSingleton<IChainHandler>(provider =>
-			{
-				var operandHandler = provider.GetService<OperandHandler>();
-				var operatorHandler = provider.GetService<OperatorHandler>();
-				var leftParenthesisHandler = provider.GetService<LeftParenthesisHandler>();
-				var rightParenthesisHandler = provider.GetService<RightParenthesisHandler>();
+            return OperationFactory.CreateOperations(operationSettings);
+        });
 
-				ArgumentNullException.ThrowIfNull(operandHandler);
-				ArgumentNullException.ThrowIfNull(operatorHandler);
-				ArgumentNullException.ThrowIfNull(leftParenthesisHandler);
-				ArgumentNullException.ThrowIfNull(rightParenthesisHandler);
+        services.AddSingleton<IProcessorCore, ProcessorCore>();
 
-				operandHandler.SetNext(operatorHandler)
-					.SetNext(leftParenthesisHandler)
-					.SetNext(rightParenthesisHandler);
+        services.AddSingleton<IUserInterface, ConsoleUserInterface>();
+        services.AddKeyedSingleton<IHandler, ConsoleHandler>(HandlerType.Console);
+        services.AddKeyedSingleton<IHandler, FileHandler>(HandlerType.File);
+        services.AddSingleton<IHandlerFactory, HandlerFactory>();
 
-				return operandHandler;
-			})
-			.AddTransient<IConverter, RpnConverter>()
-			.BuildServiceProvider();
-	}
+        services.AddSingleton<IProcessorRunner, ProcessorRunner>();
+
+        services.AddTransient<IDictionary<string, int>>(provider =>
+        {
+            IEnumerable<IOperation>? operations = provider.GetService<IEnumerable<IOperation>>();
+            ArgumentNullException.ThrowIfNull(operations);
+
+            return operations.ToDictionary(op => op.Operator, op => op.Priority);
+        });
+
+        services.AddKeyedTransient<IChainHandler, OperandHandler>(ChainHandlerType.Operand);
+        services.AddKeyedTransient<IChainHandler, OperatorHandler>(ChainHandlerType.Operator);
+        services.AddKeyedTransient<IChainHandler, LeftParenthesisHandler>(ChainHandlerType.LeftParenthesis);
+        services.AddKeyedTransient<IChainHandler, RightParenthesisHandler>(ChainHandlerType.RightParenthesis);
+
+        services.AddSingleton<IChainHandlerFactory, ChainHandlerFactory>();
+        services.AddSingleton<IChainHandler>(provider =>
+        {
+            IChainHandlerFactory factory = provider.GetRequiredService<IChainHandlerFactory>();
+            return factory.CreateChainHandler();
+        });
+
+        services.AddTransient<IConverter, RpnConverter>();
+
+        ServiceProvider = services.BuildServiceProvider();
+
+        Operations = ServiceProvider.GetService<IEnumerable<IOperation>>()?.ToList() ?? new List<IOperation>();
+    }
 }

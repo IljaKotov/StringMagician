@@ -2,5 +2,5 @@
 
 internal interface IConverter
 {
-	IAsyncEnumerable<string> ConvertToRpnAsync(IAsyncEnumerable<string> tokens);
+	IEnumerable<string> ConvertToRpnAsync(IEnumerable<string> tokens);
 }
