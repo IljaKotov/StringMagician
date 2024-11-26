@@ -2,5 +2,5 @@
 
 internal interface IProcessorRunner
 {
-	Task RunAsync();
+	Task RunAsync(CancellationToken cancellationToken);
 }

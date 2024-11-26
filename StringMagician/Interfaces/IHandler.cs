@@ -4,7 +4,6 @@ namespace StringMagician.Interfaces;
 
 internal interface IHandler
 {
-	bool IsStopped { get; }
-	IAsyncEnumerable<string> ReadInputAsync();
-	Task WriteOutputAsync(IEnumerable<ProcessingResult> output);
+	IAsyncEnumerable<string> ReadInputAsync(CancellationToken cancellationToken);
+	Task WriteOutputAsync(IEnumerable<ProcessingResult> output, CancellationToken cancellationToken);
 }

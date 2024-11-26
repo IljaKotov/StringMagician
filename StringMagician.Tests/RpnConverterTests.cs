@@ -22,7 +22,6 @@ public class RpnConverterTests : TestBase
 
 		List<string>? rpnTokens = _converter?.ConvertToRpn(tokens).ToList();
 		ArgumentNullException.ThrowIfNull(_converter);
-		
 
 		rpnTokens.Should().BeEquivalentTo(testCase.ExpectedRpnTokens, options => options.WithStrictOrdering());
 	}

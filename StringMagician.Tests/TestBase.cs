@@ -14,69 +14,74 @@ namespace StringMagician.Tests;
 
 public class TestBase
 {
-    internal readonly List<IOperation> Operations;
-    internal readonly ExpressionParser Parser = new();
-    protected readonly ServiceProvider ServiceProvider;
+	internal readonly List<IOperation> Operations;
+	internal readonly ExpressionParser Parser = new();
+	protected readonly ServiceProvider ServiceProvider;
 
-    protected TestBase()
-    {
-        IConfigurationRoot configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
+	protected TestBase()
+	{
+		IConfigurationRoot configuration = new ConfigurationBuilder()
+			.SetBasePath(Directory.GetCurrentDirectory())
+			.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+			.Build();
 
-        ServiceCollection services = new();
-        services.AddSingleton<IConfiguration>(configuration);
+		ServiceCollection services = new();
+		services.AddSingleton<IConfiguration>(configuration);
 
-        services.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind);
-        services.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind);
-        services.Configure<List<OperationSettings>>(configuration.GetSection("Settings:Operations").Bind);
+		services.Configure<CoreSettings>(configuration.GetSection("Settings:Core").Bind);
+		services.Configure<HandlerSettings>(configuration.GetSection("Settings:Handlers").Bind);
+		services.Configure<List<OperationSettings>>(configuration.GetSection("Settings:Operations").Bind);
 
-        services.AddTransient<IParser, ExpressionParser>();
-        services.AddTransient<IEvaluator, RpnEvaluator>();
+		services.AddTransient<IParser, ExpressionParser>();
+		services.AddTransient<IEvaluator, RpnEvaluator>();
 
-        services.AddSingleton<IOperationContext, OperationContext>();
-        services.AddSingleton<IEnumerable<IOperation>>(provider =>
-        {
-            IOptions<List<OperationSettings>>? operationSettings = provider.GetService<IOptions<List<OperationSettings>>>();
-            ArgumentNullException.ThrowIfNull(operationSettings);
+		services.AddSingleton<IOperationContext, OperationContext>();
 
-            return OperationFactory.CreateOperations(operationSettings);
-        });
+		services.AddSingleton<IEnumerable<IOperation>>(provider =>
+		{
+			IOptions<List<OperationSettings>>? operationSettings =
+				provider.GetService<IOptions<List<OperationSettings>>>();
 
-        services.AddSingleton<IProcessorCore, ProcessorCore>();
+			ArgumentNullException.ThrowIfNull(operationSettings);
 
-        services.AddSingleton<IUserInterface, ConsoleUserInterface>();
-        services.AddKeyedSingleton<IHandler, ConsoleHandler>(HandlerType.Console);
-        services.AddKeyedSingleton<IHandler, FileHandler>(HandlerType.File);
-        services.AddSingleton<IHandlerFactory, HandlerFactory>();
+			return OperationFactory.CreateOperations(operationSettings);
+		});
 
-        services.AddSingleton<IProcessorRunner, ProcessorRunner>();
+		services.AddSingleton<IProcessorCore, ProcessorCore>();
 
-        services.AddTransient<IDictionary<string, int>>(provider =>
-        {
-            IEnumerable<IOperation>? operations = provider.GetService<IEnumerable<IOperation>>();
-            ArgumentNullException.ThrowIfNull(operations);
+		services.AddSingleton<IUserInterface, ConsoleUserInterface>();
+		services.AddKeyedSingleton<IHandler, ConsoleHandler>(HandlerType.Console);
+		services.AddKeyedSingleton<IHandler, FileHandler>(HandlerType.File);
+		services.AddSingleton<IHandlerFactory, HandlerFactory>();
 
-            return operations.ToDictionary(op => op.Operator, op => op.Priority);
-        });
+		services.AddSingleton<IProcessorRunner, ProcessorRunner>();
 
-        services.AddKeyedTransient<IChainHandler, OperandHandler>(ChainHandlerType.Operand);
-        services.AddKeyedTransient<IChainHandler, OperatorHandler>(ChainHandlerType.Operator);
-        services.AddKeyedTransient<IChainHandler, LeftParenthesisHandler>(ChainHandlerType.LeftParenthesis);
-        services.AddKeyedTransient<IChainHandler, RightParenthesisHandler>(ChainHandlerType.RightParenthesis);
+		services.AddTransient<IDictionary<string, int>>(provider =>
+		{
+			IEnumerable<IOperation>? operations = provider.GetService<IEnumerable<IOperation>>();
+			ArgumentNullException.ThrowIfNull(operations);
 
-        services.AddSingleton<IChainHandlerFactory, ChainHandlerFactory>();
-        services.AddSingleton<IChainHandler>(provider =>
-        {
-            IChainHandlerFactory factory = provider.GetRequiredService<IChainHandlerFactory>();
-            return factory.CreateChainHandler();
-        });
+			return operations.ToDictionary(op => op.Operator, op => op.Priority);
+		});
 
-        services.AddTransient<IConverter, RpnConverter>();
+		services.AddKeyedTransient<IChainHandler, OperandHandler>(ChainHandlerType.Operand);
+		services.AddKeyedTransient<IChainHandler, OperatorHandler>(ChainHandlerType.Operator);
+		services.AddKeyedTransient<IChainHandler, LeftParenthesisHandler>(ChainHandlerType.LeftParenthesis);
+		services.AddKeyedTransient<IChainHandler, RightParenthesisHandler>(ChainHandlerType.RightParenthesis);
 
-        ServiceProvider = services.BuildServiceProvider();
+		services.AddSingleton<IChainHandlerFactory, ChainHandlerFactory>();
 
-        Operations = ServiceProvider.GetService<IEnumerable<IOperation>>()?.ToList() ?? new List<IOperation>();
-    }
+		services.AddSingleton<IChainHandler>(provider =>
+		{
+			IChainHandlerFactory factory = provider.GetRequiredService<IChainHandlerFactory>();
+
+			return factory.CreateChainHandler();
+		});
+
+		services.AddTransient<IConverter, RpnConverter>();
+
+		ServiceProvider = services.BuildServiceProvider();
+
+		Operations = ServiceProvider.GetService<IEnumerable<IOperation>>()?.ToList() ?? new List<IOperation>();
+	}
 }

@@ -37,7 +37,7 @@ internal class RpnConverter : IConverter
 		{
 			output.Add(operators.Pop());
 		}
-		
+
 		return output;
 	}
 }

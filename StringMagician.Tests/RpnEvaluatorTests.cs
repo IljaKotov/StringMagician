@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using StringMagician.Configuration;
 using StringMagician.Core;
 using StringMagician.Interfaces;
-using StringMagician.Operations;
 
 namespace StringMagician.Tests;
 

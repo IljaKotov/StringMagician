@@ -13,19 +13,23 @@ public class ProcessorRunnerTests
 		IHandler? mockHandler = Substitute.For<IHandler>();
 		IHandlerFactory? mockHandlerFactory = Substitute.For<IHandlerFactory>();
 
-		mockHandler.ReadInputAsync().Returns(GetTestLines());
-		mockHandler.WriteOutputAsync(Arg.Any<IEnumerable<ProcessingResult>>()).Returns(Task.CompletedTask);
+		mockHandler.ReadInputAsync(Arg.Any<CancellationToken>()).Returns(GetTestLines());
+
+		mockHandler.WriteOutputAsync(Arg.Any<IEnumerable<ProcessingResult>>(), Arg.Any<CancellationToken>())
+			.Returns(Task.CompletedTask);
 
 		mockProcessorCore.ProcessLine(Arg.Any<string>())
 			.Returns(new ProcessingResult("Line", "Processed", string.Empty));
 
 		mockHandlerFactory.SelectHandler().Returns(mockHandler);
 
-		ProcessorRunner runner = new ProcessorRunner(mockProcessorCore, mockHandlerFactory);
+		ProcessorRunner runner = new(mockProcessorCore, mockHandlerFactory);
 
-		await runner.RunAsync();
+		using CancellationTokenSource cts = new();
 
-		await foreach (string line in GetTestLines())
+		await runner.RunAsync(cts.Token);
+
+		await foreach (string line in GetTestLines().WithCancellation(cts.Token))
 		{
 			mockProcessorCore.Received().ProcessLine(line);
 		}
@@ -34,7 +38,8 @@ public class ProcessorRunnerTests
 
 		await mockHandler.Received(3)
 			.WriteOutputAsync(
-				Arg.Is<IEnumerable<ProcessingResult>>(r => r.All(result => result.Result == "Processed")));
+				Arg.Is<IEnumerable<ProcessingResult>>(r => r.All(result => result.Result == "Processed")),
+				Arg.Any<CancellationToken>());
 	}
 
 	private static async IAsyncEnumerable<string> GetTestLines()

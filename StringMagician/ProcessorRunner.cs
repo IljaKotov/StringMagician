@@ -6,7 +6,7 @@ namespace StringMagician;
 /// <summary>
 /// Runs the total process of evaluating.
 /// </summary>
-internal class ProcessorRunner: IProcessorRunner
+internal class ProcessorRunner : IProcessorRunner
 {
 	private readonly IProcessorCore _processorCore;
 	private readonly IHandlerFactory _handlerFactory;
@@ -25,19 +25,20 @@ internal class ProcessorRunner: IProcessorRunner
 	/// <summary>
 	/// Runs the processor by reading input, processing it, and writing output.
 	/// </summary>
-	public async Task RunAsync()
+	public async Task RunAsync(CancellationToken cancellationToken)
+
 	{
 		IHandler handler = _handlerFactory.SelectHandler();
 		ArgumentNullException.ThrowIfNull(handler);
 
-		await foreach (string line in handler.ReadInputAsync())
+		await foreach (string line in handler.ReadInputAsync(cancellationToken))
 		{
-			if (handler.IsStopped)
+			if (cancellationToken.IsCancellationRequested)
 				break;
 
 			ProcessingResult result = _processorCore.ProcessLine(line);
 
-			await handler.WriteOutputAsync([result]);
+			await handler.WriteOutputAsync([result], cancellationToken);
 		}
 	}
 }

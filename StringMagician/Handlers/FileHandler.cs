@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Options;
 using StringMagician.Configuration;
 using StringMagician.Core;
 using StringMagician.Interfaces;
@@ -12,11 +13,6 @@ internal class FileHandler : IHandler
 {
 	private readonly IUserInterface _userInterface;
 	private readonly HandlerSettings _settings;
-
-	/// <summary>
-	/// Gets a value indicating whether the application is stopped.
-	/// </summary>
-	public bool IsStopped { get; private set; }
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="FileHandler"/> class.
@@ -33,19 +29,24 @@ internal class FileHandler : IHandler
 	/// <summary>
 	/// Reads input from a file asynchronously.
 	/// </summary>
+	/// <param name="cancellationToken"></param>
 	/// <returns>A collection of input lines.</returns>
 	/// <exception cref="ArgumentNullException">Thrown when the input file path is null.</exception>
 	/// <exception cref="FileNotFoundException">Thrown when the input file does not exist.</exception>
-	public async IAsyncEnumerable<string> ReadInputAsync()
+	public async IAsyncEnumerable<string> ReadInputAsync([EnumeratorCancellation] CancellationToken cancellationToken)
 	{
-		while (IsStopped is false)
+		while (cancellationToken.IsCancellationRequested is false)
 		{
 			string inputFilePath = GetInputFilePath();
 
 			if (CheckForExitCommand(inputFilePath))
-				yield break;
+			{
+				cancellationToken.ThrowIfCancellationRequested();
 
-			await foreach (string line in ReadLinesFromFileAsync(inputFilePath))
+				yield break;
+			}
+
+			await foreach (string line in ReadLinesFromFileAsync(inputFilePath, cancellationToken))
 				yield return line;
 		}
 	}
@@ -54,12 +55,13 @@ internal class FileHandler : IHandler
 	/// Writes output to a file asynchronously.
 	/// </summary>
 	/// <param name="output">The collection of output lines to be written.</param>
+	/// <param name="cancellationToken"></param>
 	/// <exception cref="ArgumentNullException">Thrown when the output file path is null.</exception>
-	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output)
+	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output, CancellationToken cancellationToken)
 	{
 		string outputFilePath = GetOutputFilePath();
 		IEnumerable<string> formattedOutput = output.Select(FormatProcessingResult);
-		await WriteLinesToFileAsync(outputFilePath, formattedOutput);
+		await WriteLinesToFileAsync(outputFilePath, formattedOutput, cancellationToken);
 	}
 
 	private string GetInputFilePath()
@@ -80,21 +82,24 @@ internal class FileHandler : IHandler
 		if (inputFilePath.Equals(_settings.ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
 			return false;
 
-		IsStopped = true;
 		_userInterface.WriteMessage(_settings.GoodBye);
 
 		return true;
 	}
 
-	private async IAsyncEnumerable<string> ReadLinesFromFileAsync(string inputFilePath)
+	private async IAsyncEnumerable<string> ReadLinesFromFileAsync(string inputFilePath,
+		[EnumeratorCancellation] CancellationToken cancellationToken)
 	{
 		if (File.Exists(inputFilePath) is false)
 			throw new FileNotFoundException(_settings.FileNonexistent);
 
 		using StreamReader reader = new(inputFilePath);
 
-		while (await reader.ReadLineAsync() is { } line)
+		while (await reader.ReadLineAsync(cancellationToken) is { } line)
 		{
+			if (cancellationToken.IsCancellationRequested)
+				yield break;
+
 			yield return line;
 		}
 	}
@@ -108,9 +113,11 @@ internal class FileHandler : IHandler
 		return outputFilePath;
 	}
 
-	private async Task WriteLinesToFileAsync(string outputFilePath, IEnumerable<string> lines)
+	private async Task WriteLinesToFileAsync(string outputFilePath,
+		IEnumerable<string> lines,
+		CancellationToken cancellationToken)
 	{
-		await File.WriteAllLinesAsync(outputFilePath, lines);
+		await File.WriteAllLinesAsync(outputFilePath, lines, cancellationToken);
 
 		string enterTemplate = _settings.WriteFileReport;
 		_userInterface.WriteMessage(string.Format(enterTemplate, outputFilePath));

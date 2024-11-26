@@ -4,7 +4,7 @@ using StringMagician.Interfaces;
 
 namespace StringMagician.Utilities;
 
-internal class ChainHandlerFactory: IChainHandlerFactory
+internal class ChainHandlerFactory : IChainHandlerFactory
 {
 	private readonly IChainHandler _operandHandler;
 	private readonly IChainHandler _operatorHandler;

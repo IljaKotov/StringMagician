@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Options;
 using StringMagician.Configuration;
 using StringMagician.Core;
 using StringMagician.Interfaces;
@@ -12,11 +13,6 @@ internal class ConsoleHandler : IHandler
 {
 	private readonly IUserInterface _userInterface;
 	private readonly HandlerSettings _settings;
-
-	/// <summary>
-	/// Gets a value indicating whether the application is stopped.
-	/// </summary>
-	public bool IsStopped { get; private set; }
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="ConsoleHandler"/> class.
@@ -33,16 +29,21 @@ internal class ConsoleHandler : IHandler
 	/// <summary>
 	/// Reads input from the console asynchronously.
 	/// </summary>
+	/// <param name="cancellationToken"></param>
 	/// <returns>A collection of input lines.</returns>
 	/// <exception cref="ArgumentNullException">Thrown when the input is null.</exception>
-	public async IAsyncEnumerable<string> ReadInputAsync()
+	public async IAsyncEnumerable<string> ReadInputAsync([EnumeratorCancellation] CancellationToken cancellationToken)
 	{
-		while (IsStopped is false)
+		while (cancellationToken.IsCancellationRequested is false)
 		{
 			string input = await GetInputAsync();
 
 			if (CheckForExitCommand(input))
+			{
+				cancellationToken.ThrowIfCancellationRequested();
+
 				yield break;
+			}
 
 			if (string.IsNullOrWhiteSpace(input) is false)
 				yield return input;
@@ -53,10 +54,14 @@ internal class ConsoleHandler : IHandler
 	/// Writes output to the console asynchronously.
 	/// </summary>
 	/// <param name="output">The collection of output lines to be written.</param>
-	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output)
+	/// <param name="cancellationToken"></param>
+	public async Task WriteOutputAsync(IEnumerable<ProcessingResult> output, CancellationToken cancellationToken)
 	{
 		foreach (ProcessingResult result in output)
 		{
+			if (cancellationToken.IsCancellationRequested)
+				break;
+
 			string message = FormatProcessingResult(result);
 			await WriteMessageAsync(message);
 		}
@@ -80,7 +85,6 @@ internal class ConsoleHandler : IHandler
 		if (input.Equals(_settings.ExitCommand, StringComparison.CurrentCultureIgnoreCase) is false)
 			return false;
 
-		IsStopped = true;
 		_userInterface.WriteMessage(_settings.GoodBye);
 
 		return true;
@@ -89,6 +93,7 @@ internal class ConsoleHandler : IHandler
 	private Task WriteMessageAsync(string message)
 	{
 		_userInterface.WriteMessage(message);
+
 		return Task.CompletedTask;
 	}
 
